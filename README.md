@@ -77,12 +77,6 @@ src/
     └── ConfigMissing.tsx       # Hilfeseite bei fehlender Firebase-Konfiguration
 ```
 
-## Setup
-
-Die Einrichtungs-Anleitung (Firebase-Projekt, Datenbank-Regeln, Env-Variablen,
-Vercel-Deploy) und das Datenmodell stehen in der lokalen Datei `SETUP_PRIVAT.md`
-(per `.gitignore` vom Repository ausgeschlossen).
-
 ## Spielregeln in Kürze
 
 **Klassisch (5 Würfel):** Oberer Block 1er–6er (Bonus +35 ab 63), Dreierpasch &
