@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import QRCode from 'react-qr-code';
 import { useKniffelStore } from '../store';
 import { getModeConfig } from '../lib/rules';
 import { MAX_PLAYERS } from '../lib/session';
@@ -23,11 +24,10 @@ export default function WaitingRoom() {
   );
   const hostName = session.players?.[session.hostId]?.name ?? '?';
 
+  const inviteUrl = `${window.location.origin}${window.location.pathname}?code=${sessionCode}`;
+
   const copy = async (what: 'code' | 'link') => {
-    const text =
-      what === 'code'
-        ? sessionCode
-        : `${window.location.origin}${window.location.pathname}?code=${sessionCode}`;
+    const text = what === 'code' ? sessionCode : inviteUrl;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(what);
@@ -75,6 +75,16 @@ export default function WaitingRoom() {
               >
                 {copied === 'link' ? '✅ Kopiert' : '🔗 Link kopieren'}
               </button>
+            </div>
+
+            {/* QR-Code: am Tisch einfach abscannen statt Code eintippen */}
+            <div className="mt-4 flex flex-col items-center gap-1.5">
+              <div className="rounded-xl border-2 border-sol-base2 bg-white p-2.5 shadow-tile">
+                <QRCode value={inviteUrl} size={132} fgColor="#002b36" bgColor="#ffffff" />
+              </div>
+              <p className="text-xs font-semibold text-sol-base0">
+                📱 Mit der Handykamera scannen, um direkt beizutreten
+              </p>
             </div>
           </div>
 

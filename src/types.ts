@@ -55,6 +55,15 @@ export interface Player {
   scores?: ScoreMap;
 }
 
+/** Letzter Punkteeintrag – Grundlage für die Korrektur-Funktion (Undo). */
+export interface LastMove {
+  playerId: string;
+  categoryId: string;
+  /** turnIndex zum Zeitpunkt des Eintrags, damit der Zug zurückgegeben werden kann. */
+  prevTurnIndex: number;
+  at: number;
+}
+
 /** Wurzelobjekt einer Sitzung unter sessions/{code} in der Realtime Database. */
 export interface Session {
   mode: GameMode;
@@ -66,7 +75,33 @@ export interface Session {
   playerOrder?: string[];
   /** Index in playerOrder: wer gerade am Zug ist. */
   turnIndex: number;
+  /** Letzter Eintrag, kann vom Spieler selbst oder vom Host zurückgenommen werden. */
+  lastMove?: LastMove;
   players: Record<string, Player>;
+}
+
+/** Ergebnis eines Spielers in einem archivierten Spiel (Ewige Tabelle). */
+export interface HistoryPlayer {
+  name: string;
+  total: number;
+}
+
+/** Archiviertes Spiel unter history/{code}-{createdAt} in der Realtime Database. */
+export interface HistoryEntry {
+  mode: GameMode;
+  finishedAt: number;
+  players: HistoryPlayer[];
+  /** Namen der Sieger (bei Gleichstand mehrere). */
+  winners: string[];
+}
+
+/** Aggregierte Langzeit-Statistik eines Spielernamens. */
+export interface PlayerStats {
+  name: string;
+  games: number;
+  wins: number;
+  best: number;
+  avg: number;
 }
 
 export interface PlayerTotals {

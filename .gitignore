@@ -8,6 +8,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Private Setup-Anleitung (Firebase-Schritte, Datenmodell) – bleibt lokal
+SETUP_PRIVAT.md
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

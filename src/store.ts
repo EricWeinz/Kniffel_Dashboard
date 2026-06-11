@@ -8,10 +8,14 @@ import {
   leaveLobby,
   normalizeCode,
   rematch,
+  removePlayer,
   SessionError,
+  skipTurn,
   startGame,
   submitScore,
   subscribeToSession,
+  undoLastMove,
+  unlockField,
   MAX_NAME_LENGTH,
 } from './lib/session';
 
@@ -55,6 +59,10 @@ interface KniffelStore {
   resumeLastSession: () => void;
   start: () => Promise<void>;
   submit: (categoryId: string, value: number) => Promise<void>;
+  undo: () => Promise<void>;
+  unlock: (targetPlayerId: string, categoryId: string) => Promise<void>;
+  skip: () => Promise<void>;
+  kickPlayer: (targetPlayerId: string) => Promise<void>;
   startRematch: () => Promise<void>;
   leave: () => Promise<void>;
 }
@@ -85,6 +93,18 @@ export const useKniffelStore = create<KniffelStore>((set, get) => {
             : 'Die Sitzung wurde beendet oder existiert nicht mehr.',
         });
         if (expired) void deleteIfExpired(code);
+        return;
+      }
+      // Vom Host aus dem Spiel entfernt? Dann sauber zurück zur Startseite.
+      if (!session.players?.[get().playerId]) {
+        detachSession();
+        localStorage.removeItem(LAST_SESSION_KEY);
+        set({
+          session: null,
+          sessionCode: null,
+          openCategoryId: null,
+          error: 'Du wurdest aus der Sitzung entfernt.',
+        });
         return;
       }
       set({ session, sessionCode: code });
@@ -189,6 +209,30 @@ export const useKniffelStore = create<KniffelStore>((set, get) => {
         await submitScore(sessionCode, playerId, categoryId, value);
         set({ openCategoryId: null });
       });
+    },
+
+    undo: async () => {
+      const { sessionCode, playerId } = get();
+      if (!sessionCode) return;
+      await withBusy(() => undoLastMove(sessionCode, playerId));
+    },
+
+    unlock: async (targetPlayerId, categoryId) => {
+      const { sessionCode, playerId } = get();
+      if (!sessionCode) return;
+      await withBusy(() => unlockField(sessionCode, playerId, targetPlayerId, categoryId));
+    },
+
+    skip: async () => {
+      const { sessionCode, playerId } = get();
+      if (!sessionCode) return;
+      await withBusy(() => skipTurn(sessionCode, playerId));
+    },
+
+    kickPlayer: async (targetPlayerId) => {
+      const { sessionCode, playerId } = get();
+      if (!sessionCode) return;
+      await withBusy(() => removePlayer(sessionCode, playerId, targetPlayerId));
     },
 
     startRematch: async () => {

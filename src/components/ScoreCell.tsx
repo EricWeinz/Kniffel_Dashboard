@@ -1,29 +1,47 @@
 /**
  * Eine Zelle des Spielblocks.
- * - ausgefüllt: gesperrt und grau (0 = gestrichen, durchgestrichen dargestellt)
+ * - ausgefüllt: gesperrt und grau (0 = gestrichen, durchgestrichen dargestellt);
+ *   die Spielleitung kann sie per Klick wieder freigeben (Korrektur)
  * - frei + eigene Spalte + am Zug: anklickbar zum Eintragen
  * - sonst: leerer Platzhalter
  */
 interface ScoreCellProps {
   value: number | undefined;
   clickable: boolean;
+  /** Host darf ausgefüllte Felder per Klick wieder freigeben. */
+  unlockable: boolean;
   isActiveColumn: boolean;
   onClick: () => void;
+  onUnlock: () => void;
 }
 
-export default function ScoreCell({ value, clickable, isActiveColumn, onClick }: ScoreCellProps) {
+export default function ScoreCell({
+  value,
+  clickable,
+  unlockable,
+  isActiveColumn,
+  onClick,
+  onUnlock,
+}: ScoreCellProps) {
   const columnTint = isActiveColumn ? 'bg-sol-orange/5' : '';
 
   if (value !== undefined) {
+    const valueClasses = `tabular inline-flex h-9 w-full min-w-12 items-center justify-center rounded-lg bg-sol-base2 font-extrabold ${
+      value === 0 ? 'text-sol-base1 line-through' : 'text-sol-base01'
+    }`;
     return (
       <td className={`px-1.5 py-1 text-center ${columnTint}`}>
-        <span
-          className={`tabular inline-flex h-9 w-full min-w-12 items-center justify-center rounded-lg bg-sol-base2 font-extrabold ${
-            value === 0 ? 'text-sol-base1 line-through' : 'text-sol-base01'
-          }`}
-        >
-          {value}
-        </span>
+        {unlockable ? (
+          <button
+            onClick={onUnlock}
+            title="Feld wieder freigeben (Spielleitung)"
+            className={`${valueClasses} transition hover:ring-2 hover:ring-sol-red/60`}
+          >
+            {value}
+          </button>
+        ) : (
+          <span className={valueClasses}>{value}</span>
+        )}
       </td>
     );
   }

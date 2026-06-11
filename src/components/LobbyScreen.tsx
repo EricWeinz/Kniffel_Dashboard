@@ -3,6 +3,7 @@ import { useKniffelStore } from '../store';
 import { getModeConfig } from '../lib/rules';
 import { normalizeCode } from '../lib/session';
 import type { GameMode } from '../types';
+import StatsScreen from './StatsScreen';
 
 const MODES: GameMode[] = ['classic', 'extrem'];
 
@@ -15,10 +16,13 @@ export default function LobbyScreen() {
   const busy = useKniffelStore((s) => s.busy);
 
   const [selectedMode, setSelectedMode] = useState<GameMode>('classic');
+  const [showStats, setShowStats] = useState(false);
   // Einladungslinks haben die Form https://…/?code=ABC123
   const [joinCode, setJoinCode] = useState(() =>
     normalizeCode(new URLSearchParams(window.location.search).get('code') ?? ''),
   );
+
+  if (showStats) return <StatsScreen onBack={() => setShowStats(false)} />;
 
   const handleCreate = (event: FormEvent) => {
     event.preventDefault();
@@ -132,6 +136,13 @@ export default function LobbyScreen() {
             </button>
           </form>
         </div>
+
+        <button
+          onClick={() => setShowStats(true)}
+          className="mt-4 w-full rounded-xl border-2 border-sol-base1/40 px-4 py-2.5 font-bold text-sol-base01 transition hover:border-sol-violet hover:text-sol-violet"
+        >
+          📊 Ewige Tabelle
+        </button>
 
         <p className="mt-4 text-center text-xs font-semibold text-sol-base0">
           Sitzungscode mit Freunden teilen – alle sehen jeden Eintrag sofort.

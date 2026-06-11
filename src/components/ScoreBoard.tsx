@@ -12,9 +12,12 @@ export default function ScoreBoard() {
   const session = useKniffelStore((s) => s.session);
   const playerId = useKniffelStore((s) => s.playerId);
   const openScoreDialog = useKniffelStore((s) => s.openScoreDialog);
+  const unlock = useKniffelStore((s) => s.unlock);
+  const kickPlayer = useKniffelStore((s) => s.kickPlayer);
 
   if (!session) return null;
 
+  const isHost = session.hostId === playerId;
   const config = getModeConfig(session.mode);
   const order = session.playerOrder ?? [];
   const currentId =
@@ -49,15 +52,31 @@ export default function ScoreBoard() {
           {category.kind === 'fixed' ? `${category.fixedScore} Punkte` : category.hint}
         </span>
       </th>
-      {order.map((id) => (
-        <ScoreCell
-          key={id}
-          value={session.players?.[id]?.scores?.[category.id]}
-          clickable={isClickable(category, id)}
-          isActiveColumn={id === currentId}
-          onClick={() => openScoreDialog(category.id)}
-        />
-      ))}
+      {order.map((id) => {
+        const value = session.players?.[id]?.scores?.[category.id];
+        return (
+          <ScoreCell
+            key={id}
+            value={value}
+            clickable={isClickable(category, id)}
+            unlockable={isHost && value !== undefined && session.state !== 'lobby'}
+            isActiveColumn={id === currentId}
+            onClick={() => openScoreDialog(category.id)}
+            onUnlock={() => {
+              const name = session.players?.[id]?.name ?? '?';
+              const reopens =
+                session.state === 'finished' ? ' Das Spiel wird dadurch fortgesetzt.' : '';
+              if (
+                window.confirm(
+                  `Feld „${category.label}“ von ${name} (Wert: ${value}) wieder freigeben?${reopens}`,
+                )
+              ) {
+                void unlock(id, category.id);
+              }
+            }}
+          />
+        );
+      })}
     </tr>
   );
 
@@ -135,6 +154,23 @@ export default function ScoreBoard() {
                       <span className="text-[10px] font-black uppercase text-sol-orange">
                         am Zug
                       </span>
+                    )}
+                    {isHost && !isMe && session.state === 'playing' && (
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `${player?.name ?? '?'} wirklich aus dem Spiel entfernen? Der Zettel wird gelöscht.`,
+                            )
+                          ) {
+                            void kickPlayer(id);
+                          }
+                        }}
+                        title="Spieler entfernen (Spielleitung)"
+                        className="mt-0.5 text-[10px] font-bold text-sol-base1 transition hover:text-sol-red"
+                      >
+                        ✕ entfernen
+                      </button>
                     )}
                   </div>
                 </th>

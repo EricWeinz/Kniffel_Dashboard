@@ -8,7 +8,7 @@ import {
 } from 'firebase/database';
 import { getDb } from '../firebase';
 import type { GameMode, Session } from '../types';
-import { isGameComplete, isValidScore } from './rules';
+import { computeTotals, isGameComplete, isValidScore } from './rules';
 
 /**
  * Synchronisierungslogik: Alle schreibenden Spielzüge laufen als
@@ -66,6 +66,27 @@ function randomCode(): string {
 
 function sessionRef(code: string): DatabaseReference {
   return ref(getDb(), `sessions/${code}`);
+}
+
+/**
+ * Nächster Spieler ab `startIndex`, dessen Zettel noch nicht voll ist.
+ * Fertige Spieler werden übersprungen (wichtig, wenn der Host ein altes Feld
+ * freigegeben hat und dadurch die Füllstände auseinanderlaufen).
+ */
+function nextIncompleteIndex(
+  session: Session,
+  order: string[],
+  startIndex: number,
+  includeStart: boolean,
+): number {
+  const count = order.length;
+  if (count === 0) return 0;
+  for (let step = includeStart ? 0 : 1; step <= count; step++) {
+    const index = (startIndex + step) % count;
+    const player = session.players?.[order[index]];
+    if (!computeTotals(session.mode, player?.scores).isComplete) return index;
+  }
+  return startIndex % count;
 }
 
 export class SessionError extends Error {}
@@ -222,11 +243,197 @@ export async function submitScore(
       return undefined;
     }
 
+    const moveIndex = session.turnIndex % order.length;
     scores[categoryId] = value;
     player.scores = scores;
-    session.turnIndex = (session.turnIndex + 1) % order.length;
+    // Für die Korrektur-Funktion merken; wird vom nächsten Eintrag überschrieben
+    session.lastMove = { playerId, categoryId, prevTurnIndex: moveIndex, at: Date.now() };
+    session.turnIndex = nextIncompleteIndex(session, order, moveIndex, false);
 
     if (isGameComplete(session.mode, session.players, order)) {
+      session.state = 'finished';
+      session.finishedAt = Date.now();
+    }
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Korrektur: nimmt den letzten Eintrag zurück. Erlaubt für den Spieler, der ihn
+ * gemacht hat, sowie für die Spielleitung. Der Zug geht an den Spieler zurück.
+ * Funktioniert auch direkt nach Spielende (Spiel läuft dann weiter).
+ */
+export async function undoLastMove(code: string, playerId: string): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    const lastMove = session.lastMove;
+    if (!lastMove) {
+      failure = 'Es gibt keinen Eintrag, der zurückgenommen werden kann.';
+      return undefined;
+    }
+    if (playerId !== lastMove.playerId && playerId !== session.hostId) {
+      failure = 'Nur der betroffene Spieler oder die Spielleitung kann das.';
+      return undefined;
+    }
+    const scores = session.players?.[lastMove.playerId]?.scores;
+    if (!scores || scores[lastMove.categoryId] === undefined) {
+      failure = 'Der Eintrag existiert nicht mehr.';
+      return undefined;
+    }
+
+    delete scores[lastMove.categoryId];
+    session.turnIndex = lastMove.prevTurnIndex; // Zug zurück an den Spieler
+    delete session.lastMove;
+    if (session.state === 'finished') {
+      session.state = 'playing';
+      delete session.finishedAt;
+    }
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Spielleitung gibt ein beliebiges ausgefülltes Feld wieder frei (z. B. bei
+ * Falscheingaben, die erst später auffallen). Der Spieler füllt es in einer
+ * seiner nächsten Runden erneut; ein beendetes Spiel läuft dadurch weiter.
+ */
+export async function unlockField(
+  code: string,
+  byPlayerId: string,
+  targetPlayerId: string,
+  categoryId: string,
+): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== byPlayerId) {
+      failure = 'Nur die Spielleitung kann Felder freigeben.';
+      return undefined;
+    }
+    if (session.state !== 'playing' && session.state !== 'finished') {
+      failure = 'Das Spiel hat noch nicht begonnen.';
+      return undefined;
+    }
+    const scores = session.players?.[targetPlayerId]?.scores;
+    if (!scores || scores[categoryId] === undefined) {
+      failure = 'Dieses Feld ist nicht ausgefüllt.';
+      return undefined;
+    }
+
+    delete scores[categoryId];
+    if (
+      session.lastMove?.playerId === targetPlayerId &&
+      session.lastMove.categoryId === categoryId
+    ) {
+      delete session.lastMove; // Undo zeigt sonst auf ein bereits leeres Feld
+    }
+    if (session.state === 'finished') {
+      session.state = 'playing';
+      delete session.finishedAt;
+    }
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/** Spielleitung überspringt den Zug des aktuellen Spielers (z. B. kurz abwesend). */
+export async function skipTurn(code: string, byPlayerId: string): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== byPlayerId) {
+      failure = 'Nur die Spielleitung kann einen Zug überspringen.';
+      return undefined;
+    }
+    if (session.state !== 'playing') {
+      failure = 'Das Spiel läuft gerade nicht.';
+      return undefined;
+    }
+    const order = session.playerOrder ?? [];
+    session.turnIndex = nextIncompleteIndex(session, order, session.turnIndex % order.length, false);
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Spielleitung entfernt einen Spieler endgültig aus dem laufenden Spiel
+ * (z. B. dauerhaft abgesprungen). Zettel und Spalte werden gelöscht; war der
+ * Spieler am Zug, geht der Zug an den nächsten. Sind danach alle übrigen
+ * Zettel voll, endet das Spiel.
+ */
+export async function removePlayer(
+  code: string,
+  byPlayerId: string,
+  targetPlayerId: string,
+): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== byPlayerId) {
+      failure = 'Nur die Spielleitung kann Spieler entfernen.';
+      return undefined;
+    }
+    if (targetPlayerId === session.hostId) {
+      failure = 'Die Spielleitung kann sich nicht selbst entfernen.';
+      return undefined;
+    }
+    if (session.state !== 'playing') {
+      failure = 'Entfernen ist nur im laufenden Spiel möglich.';
+      return undefined;
+    }
+    const order = session.playerOrder ?? [];
+    const removedIndex = order.indexOf(targetPlayerId);
+    if (removedIndex === -1 || !session.players?.[targetPlayerId]) {
+      failure = 'Spieler nicht gefunden.';
+      return undefined;
+    }
+
+    const currentId = order[session.turnIndex % order.length];
+    const newOrder = order.filter((id) => id !== targetPlayerId);
+    delete session.players[targetPlayerId];
+    session.playerOrder = newOrder;
+    if (session.lastMove?.playerId === targetPlayerId) delete session.lastMove;
+
+    if (currentId === targetPlayerId) {
+      // Der Entfernte war am Zug: weiter mit dem Spieler an seiner Position
+      session.turnIndex = nextIncompleteIndex(session, newOrder, removedIndex % newOrder.length, true);
+    } else {
+      session.turnIndex = Math.max(0, newOrder.indexOf(currentId));
+    }
+
+    if (isGameComplete(session.mode, session.players, newOrder)) {
       session.state = 'finished';
       session.finishedAt = Date.now();
     }

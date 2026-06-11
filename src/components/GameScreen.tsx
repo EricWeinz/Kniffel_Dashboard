@@ -1,5 +1,5 @@
 import { useKniffelStore } from '../store';
-import { computeTotals, getModeConfig } from '../lib/rules';
+import { computeTotals, getCategory, getModeConfig } from '../lib/rules';
 import ScoreBoard from './ScoreBoard';
 import ScoreInputModal from './ScoreInputModal';
 import SessionCodeBadge from './SessionCodeBadge';
@@ -11,6 +11,9 @@ export default function GameScreen() {
   const playerId = useKniffelStore((s) => s.playerId);
   const openCategoryId = useKniffelStore((s) => s.openCategoryId);
   const leave = useKniffelStore((s) => s.leave);
+  const undo = useKniffelStore((s) => s.undo);
+  const skip = useKniffelStore((s) => s.skip);
+  const busy = useKniffelStore((s) => s.busy);
 
   if (!session || !sessionCode) return null;
 
@@ -25,6 +28,16 @@ export default function GameScreen() {
     ...order.map((id) => computeTotals(session.mode, session.players?.[id]?.scores).filledCount),
   );
   const round = Math.min(minFilled + 1, config.categories.length);
+
+  const isHost = session.hostId === playerId;
+  // Korrektur: letzter Eintrag, zurücknehmbar durch den Spieler selbst oder den Host
+  const lastMove = session.lastMove;
+  const canUndo = !!lastMove && (lastMove.playerId === playerId || isHost);
+  const undoPlayerName = lastMove ? (session.players?.[lastMove.playerId]?.name ?? '?') : '';
+  const undoCategoryLabel = lastMove
+    ? (getCategory(session.mode, lastMove.categoryId)?.label ?? '?')
+    : '';
+  const canSkip = isHost && currentId !== null && currentId !== playerId;
 
   const handleLeave = () => {
     if (window.confirm('Spiel wirklich verlassen? Dein Zettel bleibt in der Sitzung erhalten.')) {
@@ -70,6 +83,34 @@ export default function GameScreen() {
           Runde {round} / {config.categories.length}
         </span>
       </div>
+
+      {/* Korrektur & Host-Werkzeuge */}
+      {(canUndo || canSkip) && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {canUndo && (
+            <button
+              onClick={() => void undo()}
+              disabled={busy}
+              className="rounded-xl border-2 border-sol-base1/40 bg-white/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-blue disabled:opacity-50"
+            >
+              ↩️ Zurücknehmen: {undoPlayerName} – {undoCategoryLabel}
+            </button>
+          )}
+          {canSkip && (
+            <button
+              onClick={() => {
+                if (window.confirm(`${currentName} überspringen? Der Zug geht an den Nächsten.`)) {
+                  void skip();
+                }
+              }}
+              disabled={busy}
+              className="rounded-xl border-2 border-sol-base1/40 bg-white/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-orange disabled:opacity-50"
+            >
+              ⏭️ {currentName} überspringen
+            </button>
+          )}
+        </div>
+      )}
 
       <ScoreBoard />
 

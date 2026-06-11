@@ -18,6 +18,15 @@ Zettel ein; jede Änderung erscheint sofort bei allen, ganz ohne Reload.
 - **Zugreihenfolge** mit hervorgehobenem aktiven Spieler und Rundenzähler
 - **Automatische Berechnung** von Zwischensummen, Bonus und Endsumme
 - **Regel-Validierung** bei der Eingabe (z. B. nur Vielfache der Augenzahl im oberen Block)
+- **Korrektur-Funktion**: Der letzte Eintrag kann vom Spieler selbst oder der
+  Spielleitung zurückgenommen werden; die Spielleitung kann zusätzlich jedes
+  ausgefüllte Feld per Klick wieder freigeben (auch nach Spielende)
+- **Host-Werkzeuge**: Zug überspringen und Spieler aus dem laufenden Spiel
+  entfernen – das Spiel kann nicht mehr an einem abgesprungenen Spieler hängen
+- **QR-Code im Warteraum**: Mitspieler scannen und treten direkt bei
+- **Ewige Tabelle 📊**: Beendete Spiele werden archiviert; Langzeit-Statistik
+  mit Siegen, Ø-Punkten und Rekord pro Spielername, erreichbar von Start- und
+  Gewinner-Screen
 - **Siegerehrung** mit Rangliste, Konfetti 🎉 und Revanche-Funktion
 - **Reconnect**: Nach einem Reload verbindet sich der Browser automatisch wieder
   mit der laufenden Sitzung (Spieler-ID bleibt im localStorage erhalten)
@@ -51,16 +60,18 @@ src/
 ├── store.ts                    # Zustand-Store: lokales Abbild der Sitzung + UI-State
 ├── lib/
 │   ├── rules.ts                # Regelwerk beider Modi, Validierung, Punkteberechnung
-│   └── session.ts              # Firebase-Transaktionen: erstellen, beitreten, Zug, Revanche
+│   ├── session.ts              # Firebase-Transaktionen: beitreten, Zug, Korrektur, Host-Tools
+│   └── stats.ts                # Ewige Tabelle: Archivierung + Aggregation
 └── components/
     ├── PasswordGate.tsx        # Rudimentärer Passwortschutz vor der ganzen App
     ├── LobbyScreen.tsx         # Modusauswahl, Name, Sitzung erstellen/beitreten
-    ├── WaitingRoom.tsx         # Code teilen, Spielerliste, Spielstart (Host)
-    ├── GameScreen.tsx          # Laufendes Spiel mit Zug-Banner
+    ├── WaitingRoom.tsx         # Code + QR-Code teilen, Spielerliste, Spielstart (Host)
+    ├── GameScreen.tsx          # Laufendes Spiel mit Zug-Banner, Undo & Host-Werkzeugen
     ├── ScoreBoard.tsx          # Gemeinsamer Spielblock (alle Spieler nebeneinander)
-    ├── ScoreCell.tsx           # Einzelne Zelle (gesperrt / anklickbar / leer)
+    ├── ScoreCell.tsx           # Einzelne Zelle (gesperrt / anklickbar / leer / freigebbar)
     ├── ScoreInputModal.tsx     # Eingabedialog mit Regel-Validierung
-    ├── WinnerScreen.tsx        # Rangliste + Konfetti + Revanche
+    ├── WinnerScreen.tsx        # Rangliste + Konfetti + Revanche + Archivierung
+    ├── StatsScreen.tsx         # Ewige Tabelle + letzte Spiele
     ├── SessionCodeBadge.tsx    # Code-Chip mit "Link kopieren"
     ├── ErrorToast.tsx          # Globale Fehlermeldungen
     └── ConfigMissing.tsx       # Hilfeseite bei fehlender Firebase-Konfiguration
@@ -68,90 +79,9 @@ src/
 
 ## Setup
 
-### 1. Firebase-Projekt anlegen
-
-1. [Firebase-Konsole](https://console.firebase.google.com/) öffnen → **Projekt hinzufügen**
-   (Google Analytics kann deaktiviert bleiben).
-2. Im Projekt: **Build → Realtime Database → Datenbank erstellen**.
-   Standort z. B. `europe-west1`, Start im **gesperrten Modus**.
-3. Unter **Realtime Database → Regeln** folgende Regeln veröffentlichen:
-
-   ```json
-   {
-     "rules": {
-       "sessions": {
-         "$code": {
-           ".read": true,
-           ".write": true,
-           ".validate": "$code.matches(/^[A-Z0-9]{6}$/)"
-         }
-       }
-     }
-   }
-   ```
-
-   > Für den privaten Spieleabend ausreichend. Wer die App öffentlich betreibt,
-   > sollte zusätzlich Firebase **Anonymous Auth** aktivieren und `.read`/`.write`
-   > an `auth != null` knüpfen.
-
-4. **Projekteinstellungen (⚙️) → Allgemein → Meine Apps → Web-App (`</>`) registrieren**.
-   Die angezeigte `firebaseConfig` enthält alle benötigten Werte.
-
-### 2. Lokale Entwicklung
-
-```bash
-# Repository klonen / in den Projektordner wechseln
-npm install
-
-# Umgebungsvariablen anlegen
-cp .env.example .env
-# … und die Werte aus der Firebase-Konsole in .env eintragen.
-# Wichtig: VITE_FIREBASE_DATABASE_URL ist die URL der Realtime Database
-# (z. B. https://mein-projekt-default-rtdb.europe-west1.firebasedatabase.app)
-
-npm run dev
-```
-
-Die App läuft dann auf `http://localhost:5173`. Zum Testen einfach ein zweites
-Browserfenster (privater Modus = zweiter Spieler) öffnen und mit dem Code beitreten.
-
-### 3. Deploy auf Vercel
-
-1. Projekt zu GitHub pushen und in [Vercel](https://vercel.com) importieren –
-   Vercel erkennt Vite automatisch (Build: `npm run build`, Output: `dist`).
-2. Unter **Project → Settings → Environment Variables** alle Variablen aus der
-   `.env` anlegen (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
-   `VITE_FIREBASE_DATABASE_URL`, `VITE_FIREBASE_PROJECT_ID`,
-   `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
-   `VITE_FIREBASE_APP_ID`).
-3. **Deploy** – fertig. Es werden nur statische Dateien ausgeliefert;
-   die gesamte Echtzeit-Logik läuft direkt zwischen Browser und Firebase.
-
-## Datenmodell (Realtime Database)
-
-```
-sessions/
-  ABC123/                     # 6-stelliger Sitzungscode
-    mode: "classic" | "extrem"
-    state: "lobby" | "playing" | "finished"
-    hostId: "<player-uuid>"
-    createdAt: 1718000000000
-    turnIndex: 2              # Index in playerOrder: wer ist am Zug
-    playerOrder: ["id1", "id2", …]
-    players/
-      <player-uuid>/
-        name: "Eric"
-        joinedAt: 1718000000000
-        online: true          # Präsenz via onDisconnect
-        scores/
-          upper-3: 9          # Kategorie-ID -> eingetragener Wert
-          kniffel: 50
-```
-
-**Warum Transaktionen?** Beitritt, Spielstart, Punkteeintrag und Revanche laufen
-als `runTransaction` auf dem Sitzungsknoten. Der Server prüft dabei atomar, dass
-der Spieler wirklich am Zug ist, das Feld frei ist und der Wert regelkonform ist –
-zwei gleichzeitige Schreibzugriffe können sich daher nie gegenseitig überschreiben.
+Die Einrichtungs-Anleitung (Firebase-Projekt, Datenbank-Regeln, Env-Variablen,
+Vercel-Deploy) und das Datenmodell stehen in der lokalen Datei `SETUP_PRIVAT.md`
+(per `.gitignore` vom Repository ausgeschlossen).
 
 ## Spielregeln in Kürze
 

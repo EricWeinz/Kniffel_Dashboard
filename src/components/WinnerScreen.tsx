@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { useKniffelStore } from '../store';
 import { computeTotals, getModeConfig } from '../lib/rules';
+import { archiveResult } from '../lib/stats';
 import ScoreBoard from './ScoreBoard';
+import StatsScreen from './StatsScreen';
 
 const SOLARIZED_CONFETTI = ['#b58900', '#cb4b16', '#dc322f', '#d33682', '#268bd2', '#2aa198', '#859900'];
 
@@ -13,10 +15,24 @@ function medal(rank: number): string {
 /** Siegerehrung: Rangliste mit Konfetti, Revanche und kompletter Spielblock. */
 export default function WinnerScreen() {
   const session = useKniffelStore((s) => s.session);
+  const sessionCode = useKniffelStore((s) => s.sessionCode);
   const playerId = useKniffelStore((s) => s.playerId);
   const startRematch = useKniffelStore((s) => s.startRematch);
   const leave = useKniffelStore((s) => s.leave);
   const busy = useKniffelStore((s) => s.busy);
+  const [showStats, setShowStats] = useState(false);
+
+  // Ewige Tabelle: Der Host archiviert das Ergebnis. Der Schlüssel ist
+  // deterministisch (Code + createdAt), mehrfaches Schreiben überschreibt
+  // also nur denselben Eintrag statt Duplikate zu erzeugen.
+  useEffect(() => {
+    if (!session || !sessionCode) return;
+    if (session.hostId !== playerId || session.state !== 'finished') return;
+    archiveResult(sessionCode, session).catch((err) =>
+      console.warn('Archivierung fehlgeschlagen:', err),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.finishedAt, sessionCode, playerId]);
 
   // Konfetti-Salven beim Anzeigen der Siegerehrung
   useEffect(() => {
@@ -39,6 +55,7 @@ export default function WinnerScreen() {
     };
   }, []);
 
+  if (showStats) return <StatsScreen onBack={() => setShowStats(false)} />;
   if (!session) return null;
 
   const config = getModeConfig(session.mode);
@@ -130,6 +147,12 @@ export default function WinnerScreen() {
             {hostName} kann eine Revanche starten – oder du verlässt die Sitzung.
           </p>
         )}
+        <button
+          onClick={() => setShowStats(true)}
+          className="w-full rounded-xl border-2 border-sol-base1/40 px-4 py-2.5 font-bold text-sol-base01 transition hover:border-sol-violet hover:text-sol-violet"
+        >
+          📊 Ewige Tabelle ansehen
+        </button>
         <button
           onClick={() => void leave()}
           className="w-full rounded-xl border-2 border-sol-base1/40 px-4 py-2.5 font-bold text-sol-base00 transition hover:border-sol-red hover:text-sol-red"
