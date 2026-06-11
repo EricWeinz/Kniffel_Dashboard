@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+
+/*
+ * Solarized-Farbpalette (Ethan Schoonover) als Tailwind-Theme.
+ * Helle Variante (base3/base2) als warmer "Spielblock"-Hintergrund,
+ * dunkle Töne (base01..base03) für Text und Kontraste.
+ */
+@theme {
+  --color-sol-base03: #002b36;
+  --color-sol-base02: #073642;
+  --color-sol-base01: #586e75;
+  --color-sol-base00: #657b83;
+  --color-sol-base0: #839496;
+  --color-sol-base1: #93a1a1;
+  --color-sol-base2: #eee8d5;
+  --color-sol-base3: #fdf6e3;
+  --color-sol-yellow: #b58900;
+  --color-sol-orange: #cb4b16;
+  --color-sol-red: #dc322f;
+  --color-sol-magenta: #d33682;
+  --color-sol-violet: #6c71c4;
+  --color-sol-blue: #268bd2;
+  --color-sol-cyan: #2aa198;
+  --color-sol-green: #859900;
+
+  --font-sans: 'Nunito', ui-rounded, system-ui, -apple-system, sans-serif;
+
+  --shadow-board: 0 4px 0 0 rgba(0, 43, 54, 0.12), 0 12px 28px -8px rgba(0, 43, 54, 0.25);
+  --shadow-tile: 0 2px 0 0 rgba(0, 43, 54, 0.15);
+}
+
+html {
+  background: var(--color-sol-base3);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-sol-base02);
+  /* Dezentes Punktraster wie auf einem Spielblock */
+  background-color: var(--color-sol-base3);
+  background-image: radial-gradient(rgba(88, 110, 117, 0.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+  min-height: 100dvh;
+}
+
+/* Zahlen in Tabellen sollen sauber untereinander stehen */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sanftes Einblenden für Screens und Modal */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.25s ease-out both;
+}
+
+/* Pulsierender Rahmen für den aktiven Spieler */
+@keyframes turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(203, 75, 22, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(203, 75, 22, 0);
+  }
+}
+
+.animate-turn-pulse {
+  animation: turn-pulse 1.6s ease-in-out infinite;
+}

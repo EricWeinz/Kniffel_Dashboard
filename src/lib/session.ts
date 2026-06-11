@@ -1,0 +1,329 @@
+import {
+  ref,
+  onValue,
+  onDisconnect,
+  runTransaction,
+  set,
+  type DatabaseReference,
+} from 'firebase/database';
+import { getDb } from '../firebase';
+import type { GameMode, Session } from '../types';
+import { isGameComplete, isValidScore } from './rules';
+
+/**
+ * Synchronisierungslogik: Alle schreibenden Spielzüge laufen als
+ * Firebase-Transaktionen auf dem kompletten Sitzungsknoten. Dadurch können
+ * zwei Clients niemals gleichzeitig widersprüchliche Zustände erzeugen
+ * (z. B. doppelter Zug, Feld überschreiben, 7. Spieler beim Beitritt).
+ *
+ * Wichtiges Transaktions-Detail: Beim ersten Aufruf bekommt der Callback oft
+ * den lokalen Cache-Wert `null`, obwohl die Sitzung auf dem Server existiert.
+ * Wir geben dann `null` unverändert zurück – der Server lehnt das wegen des
+ * Hash-Vergleichs ab und ruft den Callback erneut mit den echten Daten auf.
+ * Erst wenn der Server-Commit mit `null` durchgeht, existiert die Sitzung
+ * wirklich nicht.
+ */
+
+export const MAX_PLAYERS = 6;
+export const MAX_NAME_LENGTH = 20;
+
+/**
+ * Sitzungen verfallen 24 h nach Erstellung. Da es keinen eigenen Server gibt,
+ * räumen die Clients selbst auf: Wer einer abgelaufenen Sitzung beitritt oder
+ * sich wieder verbindet, löscht sie dabei aus der Datenbank.
+ */
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function isSessionExpired(session: Pick<Session, 'createdAt'>): boolean {
+  return Date.now() - session.createdAt > SESSION_TTL_MS;
+}
+
+/** Löscht eine Sitzung transaktional – aber nur, wenn sie wirklich abgelaufen ist. */
+export async function deleteIfExpired(code: string): Promise<void> {
+  await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    return isSessionExpired(session) ? null : session;
+  });
+}
+
+/** Ohne 0/O und 1/I, damit der Code mündlich gut weitergegeben werden kann. */
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE_LENGTH = 6;
+
+export function normalizeCode(input: string): string {
+  return input.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function randomCode(): string {
+  let code = '';
+  const random = new Uint32Array(CODE_LENGTH);
+  crypto.getRandomValues(random);
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    code += CODE_CHARS[random[i] % CODE_CHARS.length];
+  }
+  return code;
+}
+
+function sessionRef(code: string): DatabaseReference {
+  return ref(getDb(), `sessions/${code}`);
+}
+
+export class SessionError extends Error {}
+
+/** Erstellt eine neue Sitzung mit kollisionsfreiem 6-stelligem Code. */
+export async function createSession(
+  mode: GameMode,
+  playerId: string,
+  playerName: string,
+): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = randomCode();
+    const result = await runTransaction(sessionRef(code), (current: Session | null) => {
+      if (current !== null) return undefined; // Code bereits vergeben -> Abbruch, neuer Versuch
+      const session: Session = {
+        mode,
+        state: 'lobby',
+        hostId: playerId,
+        createdAt: Date.now(),
+        turnIndex: 0,
+        players: {
+          [playerId]: { name: playerName, joinedAt: Date.now(), online: true },
+        },
+      };
+      return session;
+    });
+    if (result.committed) return code;
+  }
+  throw new SessionError('Es konnte kein freier Sitzungscode erzeugt werden. Bitte erneut versuchen.');
+}
+
+/**
+ * Tritt einer Sitzung bei. Erlaubt auch das Wiederbetreten (Reconnect)
+ * eines bekannten Spielers während eines laufenden Spiels.
+ */
+export async function joinSession(
+  code: string,
+  playerId: string,
+  playerName: string,
+): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null; // siehe Kommentar oben: Server-Roundtrip erzwingen
+    failure = null;
+
+    if (isSessionExpired(session)) {
+      failure = 'Diese Sitzung ist abgelaufen (älter als 24 Stunden).';
+      return null; // abgelaufene Sitzung dabei gleich löschen
+    }
+
+    const players = session.players ?? {};
+    if (players[playerId]) {
+      // Reconnect: Name ggf. aktualisieren, sonst nichts ändern
+      players[playerId].name = playerName;
+      session.players = players;
+      return session;
+    }
+    if (session.state !== 'lobby') {
+      failure = 'Dieses Spiel läuft bereits – Beitritt ist nur in der Lobby möglich.';
+      return undefined;
+    }
+    if (Object.keys(players).length >= MAX_PLAYERS) {
+      failure = `Diese Sitzung ist voll (maximal ${MAX_PLAYERS} Spieler).`;
+      return undefined;
+    }
+    players[playerId] = { name: playerName, joinedAt: Date.now(), online: true };
+    session.players = players;
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError(`Keine Sitzung mit dem Code „${code}“ gefunden.`);
+  }
+  if (!result.committed) {
+    throw new SessionError('Beitritt fehlgeschlagen. Bitte erneut versuchen.');
+  }
+}
+
+/** Nur der Host startet das Spiel; Reihenfolge = Beitrittsreihenfolge. */
+export async function startGame(code: string, playerId: string): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== playerId) {
+      failure = 'Nur die Spielleitung kann das Spiel starten.';
+      return undefined;
+    }
+    if (session.state !== 'lobby') return session; // bereits gestartet -> idempotent
+    const order = Object.entries(session.players ?? {})
+      .sort(([, a], [, b]) => a.joinedAt - b.joinedAt)
+      .map(([id]) => id);
+    if (order.length === 0) {
+      failure = 'Keine Spieler in der Sitzung.';
+      return undefined;
+    }
+    session.playerOrder = order;
+    session.turnIndex = 0;
+    session.state = 'playing';
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Trägt einen Punktwert ein. Die Transaktion stellt sicher:
+ * 1. Der Spieler ist wirklich am Zug.
+ * 2. Das Feld ist noch frei.
+ * 3. Der Wert ist nach den Regeln des Modus gültig.
+ * Danach wird der Zug weitergegeben und ggf. das Spielende erkannt.
+ */
+export async function submitScore(
+  code: string,
+  playerId: string,
+  categoryId: string,
+  value: number,
+): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.state !== 'playing') {
+      failure = 'Das Spiel läuft gerade nicht.';
+      return undefined;
+    }
+    const order = session.playerOrder ?? [];
+    const currentId = order[session.turnIndex % order.length];
+    if (currentId !== playerId) {
+      failure = 'Du bist gerade nicht am Zug.';
+      return undefined;
+    }
+    const player = session.players?.[playerId];
+    if (!player) {
+      failure = 'Spieler nicht in der Sitzung gefunden.';
+      return undefined;
+    }
+    const scores = player.scores ?? {};
+    if (scores[categoryId] !== undefined) {
+      failure = 'Dieses Feld ist bereits ausgefüllt.';
+      return undefined;
+    }
+    if (!isValidScore(session.mode, categoryId, value)) {
+      failure = 'Ungültiger Punktwert für diese Kategorie.';
+      return undefined;
+    }
+
+    scores[categoryId] = value;
+    player.scores = scores;
+    session.turnIndex = (session.turnIndex + 1) % order.length;
+
+    if (isGameComplete(session.mode, session.players, order)) {
+      session.state = 'finished';
+      session.finishedAt = Date.now();
+    }
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/** Revanche: gleiche Spieler, leere Zettel. Startspieler rotiert um eins. */
+export async function rematch(code: string, playerId: string): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== playerId) {
+      failure = 'Nur die Spielleitung kann eine Revanche starten.';
+      return undefined;
+    }
+    if (session.state !== 'finished') return session;
+
+    for (const player of Object.values(session.players ?? {})) {
+      delete player.scores;
+    }
+    const order = session.playerOrder ?? [];
+    if (order.length > 1) session.playerOrder = [...order.slice(1), order[0]];
+    session.turnIndex = 0;
+    session.state = 'playing';
+    session.createdAt = Date.now(); // Revanche verlängert die 24-h-Lebensdauer
+    delete session.finishedAt;
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Verlässt eine Sitzung in der Lobby. Verlässt der Host, wird die
+ * Spielleitung weitergegeben; der letzte Spieler löscht die Sitzung.
+ * Während eines laufenden Spiels bleibt der Zettel bestehen (nur lokal trennen).
+ */
+export async function leaveLobby(code: string, playerId: string): Promise<void> {
+  await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    if (session.state !== 'lobby' || !session.players?.[playerId]) return session;
+
+    delete session.players[playerId];
+    const remaining = Object.entries(session.players);
+    if (remaining.length === 0) return null; // Sitzung löschen
+
+    if (session.hostId === playerId) {
+      remaining.sort(([, a], [, b]) => a.joinedAt - b.joinedAt);
+      session.hostId = remaining[0][0];
+    }
+    return session;
+  });
+}
+
+/**
+ * Live-Abo auf die Sitzung. Liefert bei jeder Änderung (egal von welchem
+ * Client) sofort den neuen Stand – kein Reload nötig. Zusätzlich wird eine
+ * Online-Präsenz gepflegt: Bei Verbindungsabbruch setzt der Firebase-Server
+ * `online` automatisch auf false (onDisconnect).
+ */
+export function subscribeToSession(
+  code: string,
+  playerId: string,
+  onChange: (session: Session | null) => void,
+): () => void {
+  const sRef = sessionRef(code);
+  const onlineRef = ref(getDb(), `sessions/${code}/players/${playerId}/online`);
+
+  let presenceSet = false;
+  const unsubscribe = onValue(sRef, (snapshot) => {
+    const session = snapshot.val() as Session | null;
+    // Präsenz erst setzen, wenn der Spieler wirklich Teil der Sitzung ist
+    if (session?.players?.[playerId] && !presenceSet) {
+      presenceSet = true;
+      set(onlineRef, true).catch(() => {});
+      onDisconnect(onlineRef).set(false).catch(() => {});
+    }
+    onChange(session);
+  });
+
+  return () => {
+    unsubscribe();
+    if (presenceSet) {
+      onDisconnect(onlineRef).cancel().catch(() => {});
+      set(onlineRef, false).catch(() => {});
+    }
+  };
+}
