@@ -49,20 +49,25 @@ export default function GameScreen() {
   return (
     <main className="mx-auto min-h-dvh w-full max-w-5xl p-3 sm:p-5">
       <header className="mb-3 flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-xl font-black text-sol-base02">
+        <h1 className="text-xl font-black text-sol-base02">
           🎲 Kniffel
           <span className="ml-2 rounded-full bg-sol-violet/15 px-2.5 py-0.5 text-xs font-extrabold text-sol-violet">
             {session.mode === 'classic' ? '🎯' : '💀'} {config.shortLabel}
           </span>
         </h1>
-        <SessionCodeBadge code={sessionCode} />
-        <ThemeMenu />
-        <button
-          onClick={handleLeave}
-          className="rounded-xl border-2 border-sol-base1/40 px-3 py-1.5 text-sm font-bold text-sol-base00 transition hover:border-sol-red hover:text-sol-red"
-        >
-          Verlassen
-        </button>
+        {/* Rechte Bedienelemente als Block: bleiben so beim Umbruch zusammen und
+            rechtsbündig – wichtig, damit das 🎨-Popover auf dem Handy nicht
+            über den linken Bildschirmrand hinausläuft. */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <SessionCodeBadge code={sessionCode} />
+          <button
+            onClick={handleLeave}
+            className="rounded-xl border-2 border-sol-base1/40 px-3 py-1.5 text-sm font-bold text-sol-base00 transition hover:border-sol-red hover:text-sol-red"
+          >
+            Verlassen
+          </button>
+          <ThemeMenu />
+        </div>
       </header>
 
       {/* Zug-Banner */}
