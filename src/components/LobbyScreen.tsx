@@ -4,6 +4,8 @@ import { getModeConfig } from '../lib/rules';
 import { normalizeCode } from '../lib/session';
 import type { GameMode } from '../types';
 import StatsScreen from './StatsScreen';
+import JoinPrompt from './JoinPrompt';
+import ThemePicker from './ThemePicker';
 
 const MODES: GameMode[] = ['classic', 'extrem'];
 
@@ -21,6 +23,9 @@ export default function LobbyScreen() {
   const [joinCode, setJoinCode] = useState(() =>
     normalizeCode(new URLSearchParams(window.location.search).get('code') ?? ''),
   );
+  // Per QR-Code/Einladungslink eröffnet: sofort den Beitritts-Dialog zeigen,
+  // damit man nicht erst zum "Beitreten"-Button scrollen muss.
+  const [showJoinPrompt, setShowJoinPrompt] = useState(() => joinCode.length === 6);
 
   if (showStats) return <StatsScreen onBack={() => setShowStats(false)} />;
 
@@ -59,7 +64,7 @@ export default function LobbyScreen() {
               type="text"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="z. B. Eric"
+              placeholder="Name eingeben"
               maxLength={20}
               autoComplete="nickname"
               className="mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-white/60 px-4 py-2.5 text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue"
@@ -144,10 +149,18 @@ export default function LobbyScreen() {
           📊 Ewige Tabelle
         </button>
 
+        <div className="mt-4">
+          <ThemePicker />
+        </div>
+
         <p className="mt-4 text-center text-xs font-semibold text-sol-base0">
           Sitzungscode mit Freunden teilen – alle sehen jeden Eintrag sofort.
         </p>
       </div>
+
+      {showJoinPrompt && joinCode.length === 6 && (
+        <JoinPrompt code={joinCode} onClose={() => setShowJoinPrompt(false)} />
+      )}
     </main>
   );
 }

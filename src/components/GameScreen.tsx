@@ -3,6 +3,7 @@ import { computeTotals, getCategory, getModeConfig } from '../lib/rules';
 import ScoreBoard from './ScoreBoard';
 import ScoreInputModal from './ScoreInputModal';
 import SessionCodeBadge from './SessionCodeBadge';
+import ThemeMenu from './ThemeMenu';
 
 /** Laufendes Spiel: Kopfzeile, Zug-Banner, Spielblock und Eingabedialog. */
 export default function GameScreen() {
@@ -55,6 +56,7 @@ export default function GameScreen() {
           </span>
         </h1>
         <SessionCodeBadge code={sessionCode} />
+        <ThemeMenu />
         <button
           onClick={handleLeave}
           className="rounded-xl border-2 border-sol-base1/40 px-3 py-1.5 text-sm font-bold text-sol-base00 transition hover:border-sol-red hover:text-sol-red"

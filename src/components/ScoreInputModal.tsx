@@ -61,9 +61,16 @@ export default function ScoreInputModal({ categoryId }: { categoryId: string }) 
     enter(value);
   };
 
+  // Bei Zahleneingabe (Summenkategorien) das Fenster oben verankern: Sonst
+  // verdeckt die Smartphone-Tastatur das unten angedockte Eingabefeld und man
+  // sieht nicht, wohin die Zahl geschrieben wird. Tipp-Kategorien (kein
+  // Tastatur-Aufruf) bleiben als gut erreichbares Bottom-Sheet unten.
+  const verticalAlign =
+    category.kind === 'sum' ? 'items-start sm:items-center' : 'items-end sm:items-center';
+
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-sol-base03/60 p-4 sm:items-center"
+      className={`fixed inset-0 z-40 flex justify-center overflow-y-auto bg-sol-base03/60 p-4 ${verticalAlign}`}
       onClick={closeScoreDialog}
       role="dialog"
       aria-modal="true"

@@ -29,6 +29,69 @@
   --shadow-tile: 0 2px 0 0 rgba(0, 43, 54, 0.15);
 }
 
+/*
+ * Wählbare Farbdesigns. Jedes Theme überschreibt nur die --color-sol-*-Variablen,
+ * dadurch färben sich automatisch alle sol-*-Utility-Klassen um – ohne Änderung
+ * an einer einzigen Komponente. "Klassisch" = Standard oben (kein Override nötig).
+ * Die höhere Spezifität (:root[data-theme=…]) sticht die @theme-Defaults sicher.
+ */
+:root[data-theme='minze'] {
+  --color-sol-base03: #06302b;
+  --color-sol-base02: #15403a;
+  --color-sol-base01: #466b63;
+  --color-sol-base00: #5e827a;
+  --color-sol-base0: #86a39b;
+  --color-sol-base1: #a7c1ba;
+  --color-sol-base2: #d7ece4;
+  --color-sol-base3: #eefaf4;
+  --color-sol-yellow: #b58900;
+  --color-sol-orange: #e07b54;
+  --color-sol-red: #db5a4f;
+  --color-sol-magenta: #cf5d86;
+  --color-sol-violet: #7d83cf;
+  --color-sol-blue: #2f9fd0;
+  --color-sol-cyan: #2aa198;
+  --color-sol-green: #3f9d63;
+}
+
+:root[data-theme='lavendel'] {
+  --color-sol-base03: #241b3a;
+  --color-sol-base02: #322a52;
+  --color-sol-base01: #5b537a;
+  --color-sol-base00: #726b8c;
+  --color-sol-base0: #968fad;
+  --color-sol-base1: #b8b2cc;
+  --color-sol-base2: #e6e1f3;
+  --color-sol-base3: #f6f3fd;
+  --color-sol-yellow: #b07d12;
+  --color-sol-orange: #c96fb0;
+  --color-sol-red: #d05a86;
+  --color-sol-magenta: #c44d9b;
+  --color-sol-violet: #6f63cf;
+  --color-sol-blue: #5b8bdc;
+  --color-sol-cyan: #3aa6b0;
+  --color-sol-green: #5a9d6a;
+}
+
+:root[data-theme='himmel'] {
+  --color-sol-base03: #042a3a;
+  --color-sol-base02: #0e3a4d;
+  --color-sol-base01: #436472;
+  --color-sol-base00: #5b7c89;
+  --color-sol-base0: #84a0ab;
+  --color-sol-base1: #a6c2cd;
+  --color-sol-base2: #d6ebf2;
+  --color-sol-base3: #eef8fc;
+  --color-sol-yellow: #c08a1e;
+  --color-sol-orange: #e3794e;
+  --color-sol-red: #db5a55;
+  --color-sol-magenta: #cf5d8e;
+  --color-sol-violet: #7a78d0;
+  --color-sol-blue: #2b8fd6;
+  --color-sol-cyan: #25a3a0;
+  --color-sol-green: #3f9d63;
+}
+
 html {
   background: var(--color-sol-base3);
 }
@@ -65,14 +128,14 @@ body {
   animation: fade-up 0.25s ease-out both;
 }
 
-/* Pulsierender Rahmen für den aktiven Spieler */
+/* Pulsierender Rahmen für den aktiven Spieler – Farbe folgt dem Theme-Akzent */
 @keyframes turn-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(203, 75, 22, 0.45);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-sol-orange) 45%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(203, 75, 22, 0);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-sol-orange) 0%, transparent);
   }
 }
 

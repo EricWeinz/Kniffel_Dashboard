@@ -5,6 +5,7 @@ import { computeTotals, getModeConfig } from '../lib/rules';
 import { archiveResult } from '../lib/stats';
 import ScoreBoard from './ScoreBoard';
 import StatsScreen from './StatsScreen';
+import ThemeMenu from './ThemeMenu';
 
 const SOLARIZED_CONFETTI = ['#b58900', '#cb4b16', '#dc322f', '#d33682', '#268bd2', '#2aa198', '#859900'];
 
@@ -83,7 +84,10 @@ export default function WinnerScreen() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-3xl p-4 sm:p-6">
+    <main className="relative mx-auto min-h-dvh w-full max-w-3xl p-4 sm:p-6">
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <ThemeMenu />
+      </div>
       <header className="animate-fade-up mb-5 text-center">
         <div className="text-6xl" aria-hidden>
           🏆

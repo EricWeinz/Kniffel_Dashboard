@@ -10,6 +10,7 @@ import {
   rematch,
   removePlayer,
   SessionError,
+  setPlayerOrder,
   skipTurn,
   startGame,
   submitScore,
@@ -57,6 +58,7 @@ interface KniffelStore {
   create: (mode: GameMode) => Promise<void>;
   join: (code: string) => Promise<void>;
   resumeLastSession: () => void;
+  reorderPlayers: (newOrder: string[]) => Promise<void>;
   start: () => Promise<void>;
   submit: (categoryId: string, value: number) => Promise<void>;
   undo: () => Promise<void>;
@@ -194,6 +196,12 @@ export const useKniffelStore = create<KniffelStore>((set, get) => {
         }
         set({ session, sessionCode: code });
       });
+    },
+
+    reorderPlayers: async (newOrder) => {
+      const { sessionCode, playerId } = get();
+      if (!sessionCode) return;
+      await withBusy(() => setPlayerOrder(sessionCode, playerId, newOrder));
     },
 
     start: async () => {

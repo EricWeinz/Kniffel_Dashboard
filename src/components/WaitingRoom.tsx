@@ -2,7 +2,8 @@ import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import { useKniffelStore } from '../store';
 import { getModeConfig } from '../lib/rules';
-import { MAX_PLAYERS } from '../lib/session';
+import { effectivePlayerOrder, MAX_PLAYERS } from '../lib/session';
+import ThemeMenu from './ThemeMenu';
 
 /** Lobby einer Sitzung: Code teilen, Mitspieler sehen, Spiel starten. */
 export default function WaitingRoom() {
@@ -11,6 +12,7 @@ export default function WaitingRoom() {
   const playerId = useKniffelStore((s) => s.playerId);
   const start = useKniffelStore((s) => s.start);
   const leave = useKniffelStore((s) => s.leave);
+  const reorderPlayers = useKniffelStore((s) => s.reorderPlayers);
   const busy = useKniffelStore((s) => s.busy);
 
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
@@ -19,10 +21,19 @@ export default function WaitingRoom() {
 
   const config = getModeConfig(session.mode);
   const isHost = session.hostId === playerId;
-  const players = Object.entries(session.players ?? {}).sort(
-    ([, a], [, b]) => a.joinedAt - b.joinedAt,
-  );
+  const orderedIds = effectivePlayerOrder(session);
+  const players = orderedIds.map((id) => [id, session.players[id]] as const);
   const hostName = session.players?.[session.hostId]?.name ?? '?';
+
+  // Spieler in der Reihenfolge verschieben (nur Lobby, nur Spielleitung).
+  // Tauscht mit dem Nachbarn und speichert die neue Reihenfolge serverseitig.
+  const move = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (busy || target < 0 || target >= orderedIds.length) return;
+    const next = [...orderedIds];
+    [next[index], next[target]] = [next[target], next[index]];
+    void reorderPlayers(next);
+  };
 
   const inviteUrl = `${window.location.origin}${window.location.pathname}?code=${sessionCode}`;
 
@@ -40,7 +51,10 @@ export default function WaitingRoom() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center p-4">
       <div className="animate-fade-up w-full max-w-md">
-        <div className="rounded-2xl border-2 border-sol-base2 bg-sol-base3 p-5 shadow-board">
+        <div className="relative rounded-2xl border-2 border-sol-base2 bg-sol-base3 p-5 shadow-board">
+          <div className="absolute right-3 top-3 z-20">
+            <ThemeMenu />
+          </div>
           <div className="text-center">
             <span className="inline-block rounded-full bg-sol-violet/15 px-3 py-1 text-sm font-extrabold text-sol-violet">
               {session.mode === 'classic' ? '🎯' : '💀'} {config.label}
@@ -90,13 +104,16 @@ export default function WaitingRoom() {
 
           {/* Spielerliste mit freien Plätzen */}
           <ul className="mt-5 space-y-2">
-            {players.map(([id, player]) => (
+            {players.map(([id, player], index) => (
               <li
                 key={id}
                 className="flex items-center gap-3 rounded-xl border-2 border-sol-base2 bg-white/40 px-3 py-2"
               >
+                <span className="tabular w-5 shrink-0 text-center text-sm font-black text-sol-base0">
+                  {index + 1}.
+                </span>
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${
                     player.online ? 'bg-sol-green' : 'bg-sol-base1'
                   }`}
                   title={player.online ? 'online' : 'offline'}
@@ -110,6 +127,26 @@ export default function WaitingRoom() {
                     👑
                   </span>
                 )}
+                {isHost && players.length > 1 && (
+                  <span className="flex shrink-0 gap-1">
+                    <button
+                      onClick={() => move(index, -1)}
+                      disabled={busy || index === 0}
+                      aria-label={`${player.name} nach vorne`}
+                      className="rounded-md border-2 border-sol-base1/40 px-2 py-0.5 font-black leading-none text-sol-base01 transition hover:border-sol-blue disabled:opacity-30"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => move(index, 1)}
+                      disabled={busy || index === players.length - 1}
+                      aria-label={`${player.name} nach hinten`}
+                      className="rounded-md border-2 border-sol-base1/40 px-2 py-0.5 font-black leading-none text-sol-base01 transition hover:border-sol-blue disabled:opacity-30"
+                    >
+                      ▼
+                    </button>
+                  </span>
+                )}
               </li>
             ))}
             {Array.from({ length: MAX_PLAYERS - players.length }).map((_, i) => (
@@ -121,6 +158,12 @@ export default function WaitingRoom() {
               </li>
             ))}
           </ul>
+
+          {isHost && players.length > 1 && (
+            <p className="mt-2 text-center text-xs font-semibold text-sol-base0">
+              ↕️ Reihenfolge mit den Pfeilen an eure Sitzordnung anpassen
+            </p>
+          )}
 
           {/* Start nur durch die Spielleitung */}
           <div className="mt-5 space-y-2">

@@ -89,6 +89,27 @@ function nextIncompleteIndex(
   return startIndex % count;
 }
 
+/**
+ * Gewünschte Spielerreihenfolge mit dem aktuellen Spielerstand abgleichen:
+ * nicht mehr vorhandene IDs fallen raus, fehlende (z. B. gerade beigetretene)
+ * werden nach Beitrittszeit hinten angehängt. Ist `desired` leer, ergibt sich
+ * automatisch die reine Beitrittsreihenfolge. So bleibt die Liste konsistent,
+ * auch wenn parallel jemand beitritt oder geht.
+ */
+function reconcileOrder(session: Session, desired: string[]): string[] {
+  const players = session.players ?? {};
+  const present = desired.filter((id) => players[id]);
+  const missing = Object.keys(players)
+    .filter((id) => !present.includes(id))
+    .sort((a, b) => players[a].joinedAt - players[b].joinedAt);
+  return [...present, ...missing];
+}
+
+/** Aktuelle Lobby-Reihenfolge: gespeicherte Reihenfolge + neue Spieler hinten. */
+export function effectivePlayerOrder(session: Session): string[] {
+  return reconcileOrder(session, session.playerOrder ?? []);
+}
+
 export class SessionError extends Error {}
 
 /** Erstellt eine neue Sitzung mit kollisionsfreiem 6-stelligem Code. */
@@ -153,6 +174,14 @@ export async function joinSession(
       failure = `Diese Sitzung ist voll (maximal ${MAX_PLAYERS} Spieler).`;
       return undefined;
     }
+    // Namen müssen innerhalb einer Sitzung eindeutig sein (ohne Beachtung von
+    // Groß-/Kleinschreibung): Sonst sind die Spalten auf dem Block nicht
+    // unterscheidbar und gleiche Namen würden in der Ewigen Tabelle vermengt.
+    const wanted = playerName.trim().toLowerCase();
+    if (Object.values(players).some((p) => p.name.trim().toLowerCase() === wanted)) {
+      failure = `Der Name „${playerName}“ ist in dieser Sitzung schon vergeben. Bitte wähle einen anderen.`;
+      return undefined;
+    }
     players[playerId] = { name: playerName, joinedAt: Date.now(), online: true };
     session.players = players;
     return session;
@@ -167,7 +196,10 @@ export async function joinSession(
   }
 }
 
-/** Nur der Host startet das Spiel; Reihenfolge = Beitrittsreihenfolge. */
+/**
+ * Nur der Host startet das Spiel. Reihenfolge = die in der Lobby festgelegte
+ * Reihenfolge (Standard, falls nicht angepasst: Beitrittsreihenfolge).
+ */
 export async function startGame(code: string, playerId: string): Promise<void> {
   let failure: string | null = null;
 
@@ -180,9 +212,7 @@ export async function startGame(code: string, playerId: string): Promise<void> {
       return undefined;
     }
     if (session.state !== 'lobby') return session; // bereits gestartet -> idempotent
-    const order = Object.entries(session.players ?? {})
-      .sort(([, a], [, b]) => a.joinedAt - b.joinedAt)
-      .map(([id]) => id);
+    const order = effectivePlayerOrder(session);
     if (order.length === 0) {
       failure = 'Keine Spieler in der Sitzung.';
       return undefined;
@@ -190,6 +220,38 @@ export async function startGame(code: string, playerId: string): Promise<void> {
     session.playerOrder = order;
     session.turnIndex = 0;
     session.state = 'playing';
+    return session;
+  });
+
+  if (failure) throw new SessionError(failure);
+  if (result.committed && result.snapshot.val() === null) {
+    throw new SessionError('Sitzung existiert nicht mehr.');
+  }
+}
+
+/**
+ * Spielreihenfolge in der Lobby anpassen – nur die Spielleitung, nur vor dem
+ * Start (z. B. passend zur Sitzordnung). Die gewünschte Reihenfolge wird
+ * serverseitig mit dem aktuellen Spielerstand abgeglichen (siehe reconcileOrder),
+ * damit bei gleichzeitigem Beitritt/Verlassen niemand verloren geht.
+ */
+export async function setPlayerOrder(
+  code: string,
+  byPlayerId: string,
+  desiredOrder: string[],
+): Promise<void> {
+  let failure: string | null = null;
+
+  const result = await runTransaction(sessionRef(code), (session: Session | null) => {
+    if (session === null) return null;
+    failure = null;
+
+    if (session.hostId !== byPlayerId) {
+      failure = 'Nur die Spielleitung kann die Reihenfolge ändern.';
+      return undefined;
+    }
+    if (session.state !== 'lobby') return session; // nach dem Start nicht mehr änderbar
+    session.playerOrder = reconcileOrder(session, desiredOrder);
     return session;
   });
 
@@ -505,6 +567,12 @@ export async function leaveLobby(code: string, playerId: string): Promise<void> 
  * Client) sofort den neuen Stand – kein Reload nötig. Zusätzlich wird eine
  * Online-Präsenz gepflegt: Bei Verbindungsabbruch setzt der Firebase-Server
  * `online` automatisch auf false (onDisconnect).
+ *
+ * Die Präsenz hängt bewusst an `.info/connected` statt nur am ersten Abo:
+ * Firebase verbindet sich nach einem kurzen Abbruch (Handy gesperrt, App
+ * gewechselt, Netz weg) automatisch wieder. Bei jedem dieser Reconnects
+ * schreiben wir `online: true` erneut und schärfen den onDisconnect-Handler
+ * frisch. Sonst bliebe man nach dem ersten Abbruch dauerhaft fälschlich grau.
  */
 export function subscribeToSession(
   code: string,
@@ -513,22 +581,36 @@ export function subscribeToSession(
 ): () => void {
   const sRef = sessionRef(code);
   const onlineRef = ref(getDb(), `sessions/${code}/players/${playerId}/online`);
+  const connectedRef = ref(getDb(), '.info/connected');
 
-  let presenceSet = false;
+  let isMember = false;
+  let connectedUnsub: (() => void) | null = null;
+
+  // Präsenz erst aufbauen, wenn feststeht, dass der Spieler zur Sitzung gehört.
+  function startPresence(): void {
+    if (connectedUnsub) return;
+    connectedUnsub = onValue(connectedRef, (snap) => {
+      if (snap.val() !== true) return;
+      // Reihenfolge wichtig: erst onDisconnect scharf schalten, dann online setzen,
+      // damit bei einem Abbruch direkt nach dem Connect kein „online: true" hängenbleibt.
+      onDisconnect(onlineRef).set(false).catch(() => {});
+      set(onlineRef, true).catch(() => {});
+    });
+  }
+
   const unsubscribe = onValue(sRef, (snapshot) => {
     const session = snapshot.val() as Session | null;
-    // Präsenz erst setzen, wenn der Spieler wirklich Teil der Sitzung ist
-    if (session?.players?.[playerId] && !presenceSet) {
-      presenceSet = true;
-      set(onlineRef, true).catch(() => {});
-      onDisconnect(onlineRef).set(false).catch(() => {});
+    if (session?.players?.[playerId] && !isMember) {
+      isMember = true;
+      startPresence();
     }
     onChange(session);
   });
 
   return () => {
     unsubscribe();
-    if (presenceSet) {
+    connectedUnsub?.();
+    if (isMember) {
       onDisconnect(onlineRef).cancel().catch(() => {});
       set(onlineRef, false).catch(() => {});
     }
