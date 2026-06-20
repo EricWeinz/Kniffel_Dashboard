@@ -23,7 +23,7 @@ export default function SessionCodeBadge({ code }: { code: string }) {
     <button
       onClick={copyInviteLink}
       title="Einladungslink kopieren"
-      className="inline-flex items-center gap-2 rounded-xl border-2 border-sol-base1/40 bg-white/50 px-3 py-1.5 font-black tracking-[0.2em] text-sol-base02 shadow-tile transition hover:border-sol-blue"
+      className="inline-flex items-center gap-2 rounded-xl border-2 border-sol-base1/40 bg-sol-field/50 px-3 py-1.5 font-black tracking-[0.2em] text-sol-base02 shadow-tile transition hover:border-sol-blue"
     >
       <span className="text-xs tracking-normal text-sol-base00">Code</span>
       {code}

@@ -74,13 +74,13 @@ export default function JoinPrompt({
               maxLength={20}
               autoComplete="nickname"
               autoFocus={!playerName}
-              className="mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-white/60 px-4 py-2.5 text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue"
+              className="mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-sol-field/60 px-4 py-2.5 text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue"
             />
           </label>
           <button
             type="submit"
             disabled={busy || !playerName.trim()}
-            className="w-full rounded-xl bg-sol-blue px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+            className="w-full rounded-xl bg-sol-blue px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
           >
             {busy ? 'Bitte warten …' : '🚀 Spiel beitreten'}
           </button>

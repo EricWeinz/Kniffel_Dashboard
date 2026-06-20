@@ -52,7 +52,7 @@ export default function ThemeMenu() {
       {open && (
         <div
           role="menu"
-          className="animate-fade-up absolute right-0 z-30 mt-2 w-52 max-w-[calc(100vw-1.5rem)] rounded-2xl border-2 border-sol-base2 bg-sol-base3 p-2 shadow-board"
+          className="animate-fade-up absolute right-0 z-30 mt-2 max-h-[70vh] w-52 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-2xl border-2 border-sol-base2 bg-sol-base3 p-2 shadow-board"
         >
           <span className="block px-2 py-1 text-xs font-extrabold uppercase tracking-wide text-sol-base01">
             🎨 Farbdesign

@@ -142,7 +142,7 @@ export default function WinnerScreen() {
           <button
             onClick={() => void startRematch()}
             disabled={busy}
-            className="w-full rounded-xl bg-sol-orange px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+            className="w-full rounded-xl bg-sol-orange px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
           >
             🔄 Revanche – gleiche Runde, neue Zettel
           </button>

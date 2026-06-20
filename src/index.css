@@ -23,6 +23,21 @@
   --color-sol-cyan: #2aa198;
   --color-sol-green: #859900;
 
+  /*
+   * Semantische Zusatzfarben, damit auch Weiß/Dark sauber funktionieren:
+   * onaccent = Schrift auf farbigen Buttons (immer hell), field = Eingabe-/
+   * Kachelfläche (statt hartem Weiß), bar = dunkle Leiste/Codeblock,
+   * rowemph = hervorgehobene Endsummen-Zelle. In hellen Themes so gesetzt,
+   * dass sich gegenüber vorher nichts ändert.
+   */
+  --color-sol-onaccent: #fdf6e3;
+  --color-sol-field: #ffffff;
+  --color-sol-bar: #073642;
+  --color-sol-rowemph: #f8ecc5;
+  /* Beschriftungszelle der Summenzeilen = deckende Entsprechung von base2/50
+     auf base3. Per color-mix passt sie sich automatisch jedem Theme an. */
+  --color-sol-row: color-mix(in srgb, var(--color-sol-base2), var(--color-sol-base3));
+
   --font-sans: 'Nunito', ui-rounded, system-ui, -apple-system, sans-serif;
 
   --shadow-board: 0 4px 0 0 rgba(0, 43, 54, 0.12), 0 12px 28px -8px rgba(0, 43, 54, 0.25);
@@ -36,60 +51,120 @@
  * Die höhere Spezifität (:root[data-theme=…]) sticht die @theme-Defaults sicher.
  */
 :root[data-theme='minze'] {
-  --color-sol-base03: #06302b;
-  --color-sol-base02: #15403a;
-  --color-sol-base01: #466b63;
-  --color-sol-base00: #5e827a;
-  --color-sol-base0: #86a39b;
-  --color-sol-base1: #a7c1ba;
-  --color-sol-base2: #d7ece4;
-  --color-sol-base3: #eefaf4;
-  --color-sol-yellow: #b58900;
-  --color-sol-orange: #e07b54;
-  --color-sol-red: #db5a4f;
-  --color-sol-magenta: #cf5d86;
-  --color-sol-violet: #7d83cf;
-  --color-sol-blue: #2f9fd0;
-  --color-sol-cyan: #2aa198;
-  --color-sol-green: #3f9d63;
+  --color-sol-base03: #052924;
+  --color-sol-base02: #0f3a32;
+  --color-sol-base01: #356057;
+  --color-sol-base00: #4d7a70;
+  --color-sol-base0: #759c92;
+  --color-sol-base1: #92bcb0;
+  --color-sol-base2: #b9e6d3;
+  --color-sol-base3: #d6f5e8;
+  --color-sol-yellow: #bf8a00;
+  --color-sol-orange: #f0683a;
+  --color-sol-red: #e2473c;
+  --color-sol-magenta: #db4a84;
+  --color-sol-violet: #6671d8;
+  --color-sol-blue: #138fd2;
+  --color-sol-cyan: #0fa597;
+  --color-sol-green: #1f9d57;
+  --color-sol-onaccent: #f1fbf6;
+  --color-sol-field: #ffffff;
+  --color-sol-bar: #0f3a32;
+  --color-sol-rowemph: #f7e6a0;
 }
 
 :root[data-theme='lavendel'] {
-  --color-sol-base03: #241b3a;
-  --color-sol-base02: #322a52;
-  --color-sol-base01: #5b537a;
-  --color-sol-base00: #726b8c;
-  --color-sol-base0: #968fad;
-  --color-sol-base1: #b8b2cc;
-  --color-sol-base2: #e6e1f3;
-  --color-sol-base3: #f6f3fd;
+  --color-sol-base03: #1d1535;
+  --color-sol-base02: #2a2150;
+  --color-sol-base01: #524a76;
+  --color-sol-base00: #685f88;
+  --color-sol-base0: #8d85a8;
+  --color-sol-base1: #afa7c8;
+  --color-sol-base2: #d6ccef;
+  --color-sol-base3: #eae0fb;
   --color-sol-yellow: #b07d12;
-  --color-sol-orange: #c96fb0;
-  --color-sol-red: #d05a86;
-  --color-sol-magenta: #c44d9b;
-  --color-sol-violet: #6f63cf;
-  --color-sol-blue: #5b8bdc;
-  --color-sol-cyan: #3aa6b0;
-  --color-sol-green: #5a9d6a;
+  --color-sol-orange: #d44fb0;
+  --color-sol-red: #d8447e;
+  --color-sol-magenta: #ce3496;
+  --color-sol-violet: #6a57e6;
+  --color-sol-blue: #4b7fe8;
+  --color-sol-cyan: #2aa3b4;
+  --color-sol-green: #4a9d60;
+  --color-sol-onaccent: #f7f3fe;
+  --color-sol-field: #ffffff;
+  --color-sol-bar: #2a2150;
+  --color-sol-rowemph: #f1e3a6;
 }
 
 :root[data-theme='himmel'] {
-  --color-sol-base03: #042a3a;
-  --color-sol-base02: #0e3a4d;
-  --color-sol-base01: #436472;
-  --color-sol-base00: #5b7c89;
-  --color-sol-base0: #84a0ab;
-  --color-sol-base1: #a6c2cd;
-  --color-sol-base2: #d6ebf2;
-  --color-sol-base3: #eef8fc;
-  --color-sol-yellow: #c08a1e;
-  --color-sol-orange: #e3794e;
-  --color-sol-red: #db5a55;
-  --color-sol-magenta: #cf5d8e;
-  --color-sol-violet: #7a78d0;
-  --color-sol-blue: #2b8fd6;
-  --color-sol-cyan: #25a3a0;
-  --color-sol-green: #3f9d63;
+  --color-sol-base03: #042532;
+  --color-sol-base02: #0c394c;
+  --color-sol-base01: #38606e;
+  --color-sol-base00: #4d7785;
+  --color-sol-base0: #779eac;
+  --color-sol-base1: #99bfcd;
+  --color-sol-base2: #b9e3f2;
+  --color-sol-base3: #d6effb;
+  --color-sol-yellow: #bf850b;
+  --color-sol-orange: #f0703a;
+  --color-sol-red: #e2514a;
+  --color-sol-magenta: #d54f90;
+  --color-sol-violet: #6a67e0;
+  --color-sol-blue: #0b86e2;
+  --color-sol-cyan: #0fa39d;
+  --color-sol-green: #1f9d57;
+  --color-sol-onaccent: #f1fafe;
+  --color-sol-field: #ffffff;
+  --color-sol-bar: #0c394c;
+  --color-sol-rowemph: #f7e6a0;
+}
+
+:root[data-theme='weiss'] {
+  --color-sol-base03: #0f1216;
+  --color-sol-base02: #1b1f24;
+  --color-sol-base01: #3f454c;
+  --color-sol-base00: #5b626a;
+  --color-sol-base0: #88909a;
+  --color-sol-base1: #c3c9d0;
+  --color-sol-base2: #e9ebee;
+  --color-sol-base3: #ffffff;
+  --color-sol-yellow: #c8960c;
+  --color-sol-orange: #e4572e;
+  --color-sol-red: #db3b3b;
+  --color-sol-magenta: #d2348a;
+  --color-sol-violet: #5b51d8;
+  --color-sol-blue: #1f7fe0;
+  --color-sol-cyan: #119a91;
+  --color-sol-green: #209a4a;
+  --color-sol-onaccent: #ffffff;
+  --color-sol-field: #ffffff;
+  --color-sol-bar: #20262d;
+  --color-sol-rowemph: #fdeeb0;
+}
+
+/* Dunkler Modus: dunkle Flächen, helle Schrift. base03 bleibt sehr dunkel,
+   weil es als abdunkelnder Hintergrund hinter den Dialogen dient. */
+:root[data-theme='dark'] {
+  --color-sol-base03: #04080b;
+  --color-sol-base02: #e9eff4;
+  --color-sol-base01: #c2ccd4;
+  --color-sol-base00: #9aa6b0;
+  --color-sol-base0: #7c8893;
+  --color-sol-base1: #4b555f;
+  --color-sol-base2: #232a32;
+  --color-sol-base3: #151a20;
+  --color-sol-yellow: #d8a32a;
+  --color-sol-orange: #f0763f;
+  --color-sol-red: #e75c52;
+  --color-sol-magenta: #e05b97;
+  --color-sol-violet: #8b86e6;
+  --color-sol-blue: #3fa0e8;
+  --color-sol-cyan: #2bb6ab;
+  --color-sol-green: #44b56e;
+  --color-sol-onaccent: #f4f8fb;
+  --color-sol-field: #20262e;
+  --color-sol-bar: #2b333c;
+  --color-sol-rowemph: #3a3322;
 }
 
 html {

@@ -67,7 +67,7 @@ export default function LobbyScreen() {
               placeholder="Name eingeben"
               maxLength={20}
               autoComplete="nickname"
-              className="mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-white/60 px-4 py-2.5 text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue"
+              className="mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-sol-field/60 px-4 py-2.5 text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue"
             />
           </label>
 
@@ -89,7 +89,7 @@ export default function LobbyScreen() {
                     className={`rounded-xl border-2 p-3 text-left transition ${
                       active
                         ? 'border-sol-orange bg-sol-orange/10 shadow-tile'
-                        : 'border-sol-base1/40 bg-white/40 hover:border-sol-base1'
+                        : 'border-sol-base1/40 bg-sol-field/40 hover:border-sol-base1'
                     }`}
                   >
                     <span className="block font-black text-sol-base02">
@@ -110,7 +110,7 @@ export default function LobbyScreen() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+              className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
             >
               {busy ? 'Bitte warten …' : '✨ Neue Sitzung erstellen'}
             </button>
@@ -130,12 +130,12 @@ export default function LobbyScreen() {
               onChange={(e) => setJoinCode(normalizeCode(e.target.value).slice(0, 6))}
               placeholder="CODE"
               aria-label="Sitzungscode"
-              className="w-full flex-1 rounded-xl border-2 border-sol-base1/50 bg-white/60 px-4 py-2.5 text-center text-lg font-black uppercase tracking-[0.3em] text-sol-base02 outline-none transition placeholder:tracking-normal focus:border-sol-blue"
+              className="w-full flex-1 rounded-xl border-2 border-sol-base1/50 bg-sol-field/60 px-4 py-2.5 text-center text-lg font-black uppercase tracking-[0.3em] text-sol-base02 outline-none transition placeholder:tracking-normal focus:border-sol-blue"
             />
             <button
               type="submit"
               disabled={busy || joinCode.length !== 6}
-              className="rounded-xl bg-sol-blue px-5 py-2.5 font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+              className="rounded-xl bg-sol-blue px-5 py-2.5 font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
             >
               Beitreten
             </button>

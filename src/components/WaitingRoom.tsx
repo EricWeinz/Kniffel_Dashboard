@@ -69,7 +69,7 @@ export default function WaitingRoom() {
               {sessionCode.split('').map((char, i) => (
                 <span
                   key={i}
-                  className="flex h-12 w-10 items-center justify-center rounded-lg border-2 border-sol-base1/40 bg-white/70 text-2xl font-black text-sol-base02 shadow-tile"
+                  className="flex h-12 w-10 items-center justify-center rounded-lg border-2 border-sol-base1/40 bg-sol-field/70 text-2xl font-black text-sol-base02 shadow-tile"
                 >
                   {char}
                 </span>
@@ -107,7 +107,7 @@ export default function WaitingRoom() {
             {players.map(([id, player], index) => (
               <li
                 key={id}
-                className="flex items-center gap-3 rounded-xl border-2 border-sol-base2 bg-white/40 px-3 py-2"
+                className="flex items-center gap-3 rounded-xl border-2 border-sol-base2 bg-sol-field/40 px-3 py-2"
               >
                 <span className="tabular w-5 shrink-0 text-center text-sm font-black text-sol-base0">
                   {index + 1}.
@@ -171,7 +171,7 @@ export default function WaitingRoom() {
               <button
                 onClick={() => void start()}
                 disabled={busy}
-                className="w-full rounded-xl bg-sol-orange px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+                className="w-full rounded-xl bg-sol-orange px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
               >
                 🚀 Spiel starten ({players.length}{' '}
                 {players.length === 1 ? 'Spieler' : 'Spieler'})

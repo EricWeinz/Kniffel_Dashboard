@@ -85,7 +85,7 @@ export default function ScoreBoard() {
       <th
         scope="row"
         className={`sticky left-0 z-10 px-3 py-1.5 text-left text-sm font-black text-sol-base02 ${
-          emphasized ? 'bg-[#f8ecc5]' : 'bg-[#f5efdc]'
+          emphasized ? 'bg-sol-rowemph' : 'bg-sol-row'
         }`}
       >
         {label}
@@ -107,7 +107,7 @@ export default function ScoreBoard() {
     <tr>
       <th
         colSpan={order.length + 1}
-        className="sticky left-0 bg-sol-base02 px-3 py-1.5 text-left text-xs font-black uppercase tracking-widest text-sol-base2"
+        className="sticky left-0 bg-sol-bar px-3 py-1.5 text-left text-xs font-black uppercase tracking-widest text-sol-onaccent"
       >
         {label}
       </th>

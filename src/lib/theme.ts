@@ -14,9 +14,11 @@ export interface ThemeOption {
 
 export const THEMES: ThemeOption[] = [
   { id: 'klassisch', label: 'Klassisch', swatch: ['#fdf6e3', '#cb4b16', '#268bd2'] },
-  { id: 'minze', label: 'Minze', swatch: ['#eefaf4', '#3f9d63', '#e07b54'] },
-  { id: 'lavendel', label: 'Lavendel', swatch: ['#f6f3fd', '#6f63cf', '#c96fb0'] },
-  { id: 'himmel', label: 'Himmel', swatch: ['#eef8fc', '#2b8fd6', '#e3794e'] },
+  { id: 'weiss', label: 'Weiß', swatch: ['#ffffff', '#1f7fe0', '#e4572e'] },
+  { id: 'minze', label: 'Minze', swatch: ['#d6f5e8', '#1f9d57', '#f0683a'] },
+  { id: 'lavendel', label: 'Lavendel', swatch: ['#eae0fb', '#6a57e6', '#d44fb0'] },
+  { id: 'himmel', label: 'Himmel', swatch: ['#d6effb', '#0b86e2', '#f0703a'] },
+  { id: 'dark', label: 'Dark', swatch: ['#151a20', '#3fa0e8', '#44b56e'] },
 ];
 
 const THEME_KEY = 'kniffel:theme';

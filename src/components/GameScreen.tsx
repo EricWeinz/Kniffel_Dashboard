@@ -75,7 +75,7 @@ export default function GameScreen() {
         className={`animate-fade-up mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 px-4 py-2.5 shadow-tile ${
           myTurn
             ? 'border-sol-orange bg-sol-orange/15'
-            : 'border-sol-base2 bg-white/40'
+            : 'border-sol-base2 bg-sol-field/40'
         }`}
         role="status"
       >
@@ -98,7 +98,7 @@ export default function GameScreen() {
             <button
               onClick={() => void undo()}
               disabled={busy}
-              className="rounded-xl border-2 border-sol-base1/40 bg-white/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-blue disabled:opacity-50"
+              className="rounded-xl border-2 border-sol-base1/40 bg-sol-field/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-blue disabled:opacity-50"
             >
               ↩️ Zurücknehmen: {undoPlayerName} – {undoCategoryLabel}
             </button>
@@ -111,7 +111,7 @@ export default function GameScreen() {
                 }
               }}
               disabled={busy}
-              className="rounded-xl border-2 border-sol-base1/40 bg-white/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-orange disabled:opacity-50"
+              className="rounded-xl border-2 border-sol-base1/40 bg-sol-field/40 px-3 py-1.5 text-sm font-bold text-sol-base01 transition hover:border-sol-orange disabled:opacity-50"
             >
               ⏭️ {currentName} überspringen
             </button>

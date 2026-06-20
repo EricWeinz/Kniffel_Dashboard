@@ -9,7 +9,7 @@ export default function ThemeSwatchGrid({
   onChoose: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-3 gap-2">
       {THEMES.map((t) => {
         const active = value === t.id;
         return (

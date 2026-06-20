@@ -47,7 +47,7 @@ export default function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           placeholder="Passwort"
           autoFocus
           autoComplete="current-password"
-          className={`mt-4 w-full rounded-xl border-2 bg-white/60 px-4 py-2.5 text-center text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue ${
+          className={`mt-4 w-full rounded-xl border-2 bg-sol-field/60 px-4 py-2.5 text-center text-lg font-bold text-sol-base02 outline-none transition focus:border-sol-blue ${
             error ? 'border-sol-red' : 'border-sol-base1/50'
           }`}
         />
@@ -60,7 +60,7 @@ export default function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         <button
           type="submit"
           disabled={input.length === 0}
-          className="mt-4 w-full rounded-xl bg-sol-blue px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+          className="mt-4 w-full rounded-xl bg-sol-blue px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
         >
           Freischalten
         </button>

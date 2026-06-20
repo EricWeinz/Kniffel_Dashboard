@@ -106,7 +106,7 @@ export default function ScoreInputModal({ categoryId }: { categoryId: string }) 
                   className={`rounded-xl border-2 px-2 py-2.5 text-center shadow-tile transition hover:brightness-105 active:translate-y-0.5 disabled:opacity-50 ${
                     count === 0
                       ? 'border-sol-red/40 bg-sol-red/10'
-                      : 'border-sol-base1/40 bg-white/60 hover:border-sol-blue'
+                      : 'border-sol-base1/40 bg-sol-field/60 hover:border-sol-blue'
                   }`}
                 >
                   <span className="block text-xs font-bold text-sol-base00">
@@ -130,7 +130,7 @@ export default function ScoreInputModal({ categoryId }: { categoryId: string }) 
               <button
                 onClick={() => enter(category.fixedScore!)}
                 disabled={busy}
-                className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+                className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
               >
                 ✓ Geschafft – {category.fixedScore} Punkte
               </button>
@@ -162,7 +162,7 @@ export default function ScoreInputModal({ categoryId }: { categoryId: string }) 
                     setInputError(null);
                   }}
                   autoFocus
-                  className="tabular mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-white/60 px-4 py-2.5 text-center text-2xl font-black text-sol-base02 outline-none transition focus:border-sol-blue"
+                  className="tabular mt-1.5 w-full rounded-xl border-2 border-sol-base1/50 bg-sol-field/60 px-4 py-2.5 text-center text-2xl font-black text-sol-base02 outline-none transition focus:border-sol-blue"
                 />
               </label>
               {multiplier > 1 && (
@@ -181,7 +181,7 @@ export default function ScoreInputModal({ categoryId }: { categoryId: string }) 
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-base3 shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
+                className="w-full rounded-xl bg-sol-green px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
               >
                 ✓ Eintragen
               </button>
