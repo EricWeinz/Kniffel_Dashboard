@@ -4,6 +4,7 @@ import { useKniffelStore } from '../store';
 import { getModeConfig } from '../lib/rules';
 import { effectivePlayerOrder, MAX_PLAYERS } from '../lib/session';
 import ThemeMenu from './ThemeMenu';
+import { useTheme, themedEmoji } from '../lib/theme';
 
 /** Lobby einer Sitzung: Code teilen, Mitspieler sehen, Spiel starten. */
 export default function WaitingRoom() {
@@ -14,6 +15,7 @@ export default function WaitingRoom() {
   const leave = useKniffelStore((s) => s.leave);
   const reorderPlayers = useKniffelStore((s) => s.reorderPlayers);
   const busy = useKniffelStore((s) => s.busy);
+  const theme = useTheme();
 
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
 
@@ -124,7 +126,7 @@ export default function WaitingRoom() {
                 </span>
                 {id === session.hostId && (
                   <span title="Spielleitung" aria-label="Spielleitung">
-                    👑
+                    {themedEmoji(theme, 'crown', '👑')}
                   </span>
                 )}
                 {isHost && players.length > 1 && (
@@ -173,7 +175,7 @@ export default function WaitingRoom() {
                 disabled={busy}
                 className="w-full rounded-xl bg-sol-orange px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
               >
-                🚀 Spiel starten ({players.length}{' '}
+                {themedEmoji(theme, 'rocket', '🚀')} Spiel starten ({players.length}{' '}
                 {players.length === 1 ? 'Spieler' : 'Spieler'})
               </button>
             ) : (

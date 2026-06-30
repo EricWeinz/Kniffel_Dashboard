@@ -6,6 +6,7 @@ import type { GameMode } from '../types';
 import StatsScreen from './StatsScreen';
 import JoinPrompt from './JoinPrompt';
 import ThemePicker from './ThemePicker';
+import BrandMark from './BrandMark';
 
 const MODES: GameMode[] = ['classic', 'extrem'];
 
@@ -44,7 +45,7 @@ export default function LobbyScreen() {
       <div className="animate-fade-up w-full max-w-md">
         <header className="mb-6 text-center">
           <div className="text-6xl" aria-hidden>
-            🎲
+            <BrandMark imgClassName="mx-auto h-24 w-auto drop-shadow-md" />
           </div>
           <h1 className="mt-2 text-4xl font-black tracking-tight text-sol-base02">
             Kniffel<span className="text-sol-orange"> Dashboard</span>

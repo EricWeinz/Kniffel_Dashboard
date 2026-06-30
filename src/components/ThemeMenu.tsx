@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { THEMES, applyTheme, getStoredTheme } from '../lib/theme';
+import { THEMES, applyTheme, useTheme } from '../lib/theme';
 
 /**
  * Kompaktes Farbdesign-Menü für die Header während einer Sitzung: ein 🎨-Button,
@@ -12,12 +12,11 @@ import { THEMES, applyTheme, getStoredTheme } from '../lib/theme';
  */
 export default function ThemeMenu() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState(getStoredTheme);
+  const theme = useTheme();
   const ref = useRef<HTMLDivElement>(null);
 
   const choose = (id: string) => {
     applyTheme(id);
-    setTheme(id);
     setOpen(false);
   };
 

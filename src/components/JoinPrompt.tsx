@@ -1,5 +1,6 @@
 import { useEffect, type FormEvent } from 'react';
 import { useKniffelStore } from '../store';
+import { useTheme, themedEmoji } from '../lib/theme';
 
 /**
  * Beitritts-Dialog nach dem Scannen eines QR-Codes bzw. Öffnen eines
@@ -17,6 +18,7 @@ export default function JoinPrompt({
   const setPlayerName = useKniffelStore((s) => s.setPlayerName);
   const join = useKniffelStore((s) => s.join);
   const busy = useKniffelStore((s) => s.busy);
+  const theme = useTheme();
 
   // Escape schließt den Dialog
   useEffect(() => {
@@ -46,7 +48,9 @@ export default function JoinPrompt({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-sol-base02">🎲 Du wurdest eingeladen!</h2>
+            <h2 className="text-xl font-black text-sol-base02">
+              {themedEmoji(theme, 'dice', '🎲')} Du wurdest eingeladen!
+            </h2>
             <p className="mt-0.5 text-sm font-semibold text-sol-base00">
               Sitzung{' '}
               <span className="font-black tracking-[0.2em] text-sol-base02">{code}</span>
@@ -82,7 +86,7 @@ export default function JoinPrompt({
             disabled={busy || !playerName.trim()}
             className="w-full rounded-xl bg-sol-blue px-4 py-3 text-lg font-black text-sol-onaccent shadow-tile transition hover:brightness-110 active:translate-y-0.5 disabled:opacity-50"
           >
-            {busy ? 'Bitte warten …' : '🚀 Spiel beitreten'}
+            {busy ? 'Bitte warten …' : `${themedEmoji(theme, 'rocket', '🚀')} Spiel beitreten`}
           </button>
           <button
             type="button"

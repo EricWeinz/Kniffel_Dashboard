@@ -167,6 +167,32 @@
   --color-sol-rowemph: #3a3322;
 }
 
+/* Dynamo Dresden – schwarz-gelb. Dunkle Flächen, kräftiges Gelb/Gold als
+   Marke; Schrift auf gelben Buttons & Leisten ist dunkel (onaccent). Rot
+   bleibt für Fehler/Gefahr erhalten, Grün ist ein Limegelb (Online/„Los"). */
+:root[data-theme='dynamo'] {
+  --color-sol-base03: #060604;
+  --color-sol-base02: #fdfdfd;
+  --color-sol-base01: #d8d6d0;
+  --color-sol-base00: #a8a59d;
+  --color-sol-base0: #7f7c74;
+  --color-sol-base1: #555049;
+  --color-sol-base2: #221f17;
+  --color-sol-base3: #060604;
+  --color-sol-yellow: #f3ac26;
+  --color-sol-orange: #f3ac26;
+  --color-sol-red: #93000e;
+  --color-sol-magenta: #f3ac26;
+  --color-sol-violet: #f3ac26;
+  --color-sol-blue: #f3ac26;
+  --color-sol-cyan: #f3ac26;
+  --color-sol-green: #f3ac26;
+  --color-sol-onaccent: #060604;
+  --color-sol-field: #181610;
+  --color-sol-bar: #f3ac26;
+  --color-sol-rowemph: #4a3308;
+}
+
 html {
   background: var(--color-sol-base3);
 }

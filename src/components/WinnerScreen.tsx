@@ -6,6 +6,7 @@ import { archiveResult } from '../lib/stats';
 import ScoreBoard from './ScoreBoard';
 import StatsScreen from './StatsScreen';
 import ThemeMenu from './ThemeMenu';
+import { getTheme, CONFETTI_COLORS } from '../lib/theme';
 
 const SOLARIZED_CONFETTI = ['#b58900', '#cb4b16', '#dc322f', '#d33682', '#268bd2', '#2aa198', '#859900'];
 
@@ -38,12 +39,13 @@ export default function WinnerScreen() {
   // Konfetti-Salven beim Anzeigen der Siegerehrung
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const colors = CONFETTI_COLORS[getTheme()] ?? SOLARIZED_CONFETTI;
     const fire = (ratio: number, options: confetti.Options) =>
       void confetti({
         particleCount: Math.floor(220 * ratio),
         spread: 75,
         ticks: 220,
-        colors: SOLARIZED_CONFETTI,
+        colors,
         disableForReducedMotion: true,
         ...options,
       });

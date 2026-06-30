@@ -4,6 +4,7 @@ import ScoreBoard from './ScoreBoard';
 import ScoreInputModal from './ScoreInputModal';
 import SessionCodeBadge from './SessionCodeBadge';
 import ThemeMenu from './ThemeMenu';
+import BrandMark from './BrandMark';
 
 /** Laufendes Spiel: Kopfzeile, Zug-Banner, Spielblock und Eingabedialog. */
 export default function GameScreen() {
@@ -49,9 +50,10 @@ export default function GameScreen() {
   return (
     <main className="mx-auto min-h-dvh w-full max-w-5xl p-3 sm:p-5">
       <header className="mb-3 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-black text-sol-base02">
-          🎲 Kniffel
-          <span className="ml-2 rounded-full bg-sol-violet/15 px-2.5 py-0.5 text-xs font-extrabold text-sol-violet">
+        <h1 className="flex items-center gap-2 text-xl font-black text-sol-base02">
+          <BrandMark imgClassName="h-7 w-auto" />
+          Kniffel
+          <span className="rounded-full bg-sol-violet/15 px-2.5 py-0.5 text-xs font-extrabold text-sol-violet">
             {session.mode === 'classic' ? '🎯' : '💀'} {config.shortLabel}
           </span>
         </h1>
