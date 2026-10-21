@@ -4,7 +4,8 @@ import type { Category, GameMode, ModeConfig, PlayerTotals, ScoreMap } from '../
  * Regelwerk für beide Spielmodi.
  *
  * Klassisches Kniffel: 5 Würfel, Bonus +35 ab 63 Punkten im oberen Block.
- * Kniffel Extrem:      6 Würfel, Bonus +45 ab 73 Punkten im oberen Block,
+ * Kniffel Extrem:      6 Würfel (5 normale + 1 roter Zehnseitiger mit 0–9),
+ *                      Bonus +45 ab 73 Punkten im oberen Block,
  *                      erweiterte Kategorien nach offiziellem Regelwerk
  *                      (Zwei Paare, Drei Paare, Zwei Dreier,
  *                      Großes Full-House, Highway, Kniffel Extrem,
@@ -106,6 +107,13 @@ const CLASSIC: ModeConfig = {
   ],
 };
 
+/**
+ * Kniffel Extrem würfelt mit 5 normalen Würfeln (1–6) und einem roten
+ * Zehnseitigen (0–9). Augensumme aller 6 Würfel: 5 × 1 + 0 = 5 bis 5 × 6 + 9 = 39.
+ */
+const EXTREM_MIN_SUM = 5 * 1 + 0;
+const EXTREM_MAX_SUM = 5 * 6 + 9;
+
 const EXTREM: ModeConfig = {
   mode: 'extrem',
   label: 'Kniffel Extrem',
@@ -122,8 +130,8 @@ const EXTREM: ModeConfig = {
       hint: 'Mind. 3 gleiche Würfel – alle Augen zählen',
       section: 'lower',
       kind: 'sum',
-      minSum: 6,
-      maxSum: 36,
+      minSum: EXTREM_MIN_SUM,
+      maxSum: EXTREM_MAX_SUM,
     },
     {
       id: 'four-of-a-kind',
@@ -131,8 +139,8 @@ const EXTREM: ModeConfig = {
       hint: 'Mind. 4 gleiche Würfel – alle Augen zählen',
       section: 'lower',
       kind: 'sum',
-      minSum: 6,
-      maxSum: 36,
+      minSum: EXTREM_MIN_SUM,
+      maxSum: EXTREM_MAX_SUM,
     },
     {
       id: 'two-pairs',
@@ -140,8 +148,8 @@ const EXTREM: ModeConfig = {
       hint: '2 verschiedene Paare – alle Augen zählen',
       section: 'lower',
       kind: 'sum',
-      minSum: 6,
-      maxSum: 36,
+      minSum: EXTREM_MIN_SUM,
+      maxSum: EXTREM_MAX_SUM,
     },
     {
       id: 'three-pairs',
@@ -194,7 +202,7 @@ const EXTREM: ModeConfig = {
     {
       id: 'highway',
       label: 'Highway',
-      hint: '6 aufeinanderfolgende Zahlen (1–6)',
+      hint: '6 aufeinanderfolgende Zahlen (0–5, 1–6 oder 2–7)',
       section: 'lower',
       kind: 'fixed',
       fixedScore: 50,
@@ -237,8 +245,8 @@ const EXTREM: ModeConfig = {
       hint: 'Alle Augen zählen',
       section: 'lower',
       kind: 'sum',
-      minSum: 6,
-      maxSum: 36,
+      minSum: EXTREM_MIN_SUM,
+      maxSum: EXTREM_MAX_SUM,
     },
     {
       id: 'super-chance',
@@ -246,8 +254,8 @@ const EXTREM: ModeConfig = {
       hint: 'Alle Augen zählen – wird × 2 gewertet',
       section: 'lower',
       kind: 'sum',
-      minSum: 6,
-      maxSum: 36,
+      minSum: EXTREM_MIN_SUM,
+      maxSum: EXTREM_MAX_SUM,
       multiplier: 2,
     },
   ],

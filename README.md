@@ -83,8 +83,9 @@ src/
 Viererpasch (Augensumme), Full House 25, Kleine Straße 30, Große Straße 40,
 Kniffel 50, Chance (Augensumme).
 
-**Extrem (6 Würfel):** Oberer Block 1er–6er (Bonus +45 ab 73), Dreierpasch,
-Viererpasch, Zwei Paare & Chance (jeweils Augensumme aller 6 Würfel),
+**Extrem (6 Würfel: 5 normale + 1 roter Zehnseitiger mit 0–9):** Oberer Block
+1er–6er (Bonus +45 ab 73), Dreierpasch, Viererpasch, Zwei Paare & Chance
+(jeweils Augensumme aller 6 Würfel, also 5–39),
 Drei Paare 35, Zwei Dreier 45, Full-House 25, Großes Full-House 45,
 Kleine Straße 30, Große Straße 40, Highway 50, Kniffel 50, Kniffel Extrem 75,
 10 oder weniger 40 (Augensumme ≤ 10), 33 oder mehr 40 (Augensumme ≥ 33),
