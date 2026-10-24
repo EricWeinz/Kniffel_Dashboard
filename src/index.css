@@ -49,74 +49,91 @@
  * dadurch färben sich automatisch alle sol-*-Utility-Klassen um – ohne Änderung
  * an einer einzigen Komponente. "Klassisch" = Standard oben (kein Override nötig).
  * Die höhere Spezifität (:root[data-theme=…]) sticht die @theme-Defaults sicher.
+ *
+ * Minze, Lavendel und Himmel: getönter Seitenhintergrund (--color-sol-page) mit
+ * fast weißen Karten darauf – wie ein weißer Spielblock auf farbigem Tisch.
+ * Der Hauptakzent (sol-orange) stammt aus der Theme-Farbe selbst, damit
+ * halbtransparente Hervorhebungen sauber bleiben statt ins Graue zu kippen.
+ * Gold (sol-yellow) markiert Endsumme und Sieger; rowemph = Gold 15 % auf base3.
+ * Alle Textfarben haben mindestens ~4,3:1 Kontrast zu ihrem Hintergrund.
  */
+
+/* Minze: Jadegrün als Akzent, Meerblau, Tannengrün für die Leisten. */
 :root[data-theme='minze'] {
-  --color-sol-base03: #052924;
-  --color-sol-base02: #0f3a32;
-  --color-sol-base01: #356057;
-  --color-sol-base00: #4d7a70;
-  --color-sol-base0: #759c92;
-  --color-sol-base1: #92bcb0;
-  --color-sol-base2: #b9e6d3;
-  --color-sol-base3: #d6f5e8;
-  --color-sol-yellow: #bf8a00;
-  --color-sol-orange: #f0683a;
-  --color-sol-red: #e2473c;
-  --color-sol-magenta: #db4a84;
-  --color-sol-violet: #6671d8;
-  --color-sol-blue: #138fd2;
-  --color-sol-cyan: #0fa597;
-  --color-sol-green: #1f9d57;
-  --color-sol-onaccent: #f1fbf6;
+  --color-sol-base03: #002016;
+  --color-sol-base02: #0a3225;
+  --color-sol-base01: #2f5546;
+  --color-sol-base00: #47695b;
+  --color-sol-base0: #557467;
+  --color-sol-base1: #a8c6b9;
+  --color-sol-base2: #d4ede2;
+  --color-sol-base3: #f6fdfa;
+  --color-sol-yellow: #dba833;
+  --color-sol-orange: #067f5c;
+  --color-sol-red: #ce3537;
+  --color-sol-magenta: #b94082;
+  --color-sol-violet: #5d55a9;
+  --color-sol-blue: #00729b;
+  --color-sol-cyan: #0f9293;
+  --color-sol-green: #067f5c;
+  --color-sol-onaccent: #f7fefb;
   --color-sol-field: #ffffff;
-  --color-sol-bar: #0f3a32;
-  --color-sol-rowemph: #f7e6a0;
+  --color-sol-bar: #164f3e;
+  --color-sol-rowemph: #f2f0dc;
+  --color-sol-page: #d9f6e9;
 }
 
+/* Lavendel: Violett als Akzent (auch für die „Los“-Buttons), Immergrün-Blau,
+   Aubergine für die Leisten, Honiggold. Rot ist ein Himbeerton, damit
+   „Streichen“ klar vom violetten Akzent zu unterscheiden ist. */
 :root[data-theme='lavendel'] {
-  --color-sol-base03: #1d1535;
-  --color-sol-base02: #2a2150;
-  --color-sol-base01: #524a76;
-  --color-sol-base00: #685f88;
-  --color-sol-base0: #8d85a8;
-  --color-sol-base1: #afa7c8;
-  --color-sol-base2: #d6ccef;
-  --color-sol-base3: #eae0fb;
-  --color-sol-yellow: #b07d12;
-  --color-sol-orange: #d44fb0;
-  --color-sol-red: #d8447e;
-  --color-sol-magenta: #ce3496;
-  --color-sol-violet: #6a57e6;
-  --color-sol-blue: #4b7fe8;
-  --color-sol-cyan: #2aa3b4;
-  --color-sol-green: #4a9d60;
-  --color-sol-onaccent: #f7f3fe;
+  --color-sol-base03: #1d1230;
+  --color-sol-base02: #2e2245;
+  --color-sol-base01: #504469;
+  --color-sol-base00: #645a7d;
+  --color-sol-base0: #6f6685;
+  --color-sol-base1: #c1b8d8;
+  --color-sol-base2: #e9e1fd;
+  --color-sol-base3: #fbfafe;
+  --color-sol-yellow: #dca744;
+  --color-sol-orange: #7954c2;
+  --color-sol-red: #cb304f;
+  --color-sol-magenta: #b24393;
+  --color-sol-violet: #854299;
+  --color-sol-blue: #4062be;
+  --color-sol-cyan: #2b9095;
+  --color-sol-green: #7954c2;
+  --color-sol-onaccent: #fcfbfe;
   --color-sol-field: #ffffff;
-  --color-sol-bar: #2a2150;
-  --color-sol-rowemph: #f1e3a6;
+  --color-sol-bar: #45326e;
+  --color-sol-rowemph: #f6eee2;
+  --color-sol-page: #eae3fe;
 }
 
+/* Himmel: Himmelblau als Akzent, Wiesengrün für „Los“, Nachtblau für die
+   Leisten, Sonnengelb für Endsumme und Sieger. */
 :root[data-theme='himmel'] {
-  --color-sol-base03: #042532;
-  --color-sol-base02: #0c394c;
-  --color-sol-base01: #38606e;
-  --color-sol-base00: #4d7785;
-  --color-sol-base0: #779eac;
-  --color-sol-base1: #99bfcd;
-  --color-sol-base2: #b9e3f2;
-  --color-sol-base3: #d6effb;
-  --color-sol-yellow: #bf850b;
-  --color-sol-orange: #f0703a;
-  --color-sol-red: #e2514a;
-  --color-sol-magenta: #d54f90;
-  --color-sol-violet: #6a67e0;
-  --color-sol-blue: #0b86e2;
-  --color-sol-cyan: #0fa39d;
-  --color-sol-green: #1f9d57;
-  --color-sol-onaccent: #f1fafe;
+  --color-sol-base03: #001c2b;
+  --color-sol-base02: #072e42;
+  --color-sol-base01: #2c5066;
+  --color-sol-base00: #456579;
+  --color-sol-base0: #537082;
+  --color-sol-base1: #a6c2d4;
+  --color-sol-base2: #d2eafa;
+  --color-sol-base3: #f7fcff;
+  --color-sol-yellow: #e8b12d;
+  --color-sol-orange: #0575ac;
+  --color-sol-red: #d03739;
+  --color-sol-magenta: #b94082;
+  --color-sol-violet: #644fb1;
+  --color-sol-blue: #2e5bb4;
+  --color-sol-cyan: #1c989e;
+  --color-sol-green: #22864a;
+  --color-sol-onaccent: #f9fcff;
   --color-sol-field: #ffffff;
-  --color-sol-bar: #0c394c;
-  --color-sol-rowemph: #f7e6a0;
+  --color-sol-bar: #164667;
+  --color-sol-rowemph: #f5f1e0;
+  --color-sol-page: #ddf1fe;
 }
 
 :root[data-theme='weiss'] {
@@ -193,8 +210,10 @@
   --color-sol-rowemph: #4a3308;
 }
 
+/* Seitenhintergrund = base3, außer ein Theme setzt einen eigenen Seitenton
+   (--color-sol-page, siehe Minze/Lavendel/Himmel). */
 html {
-  background: var(--color-sol-base3);
+  background: var(--color-sol-page, var(--color-sol-base3));
 }
 
 body {
@@ -202,7 +221,7 @@ body {
   font-family: var(--font-sans);
   color: var(--color-sol-base02);
   /* Dezentes Punktraster wie auf einem Spielblock */
-  background-color: var(--color-sol-base3);
+  background-color: var(--color-sol-page, var(--color-sol-base3));
   background-image: radial-gradient(rgba(88, 110, 117, 0.10) 1px, transparent 1px);
   background-size: 22px 22px;
   min-height: 100dvh;

@@ -113,7 +113,10 @@ export default function WinnerScreen() {
             key={entry.id}
             className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-tile ${
               entry.rank === 1
-                ? 'border-sol-yellow bg-sol-yellow/15'
+                ? // Gold deckend mit base3 mischen statt transparent: Auf einem
+                  // getönten Seitenhintergrund (Minze/Lavendel/Himmel) würde die
+                  // Siegerzeile sonst gräulich. In den übrigen Themes sieht sie gleich aus.
+                  'border-sol-yellow bg-[color-mix(in_srgb,var(--color-sol-yellow)_15%,var(--color-sol-base3))]'
                 : 'border-sol-base2 bg-sol-base3'
             }`}
           >
